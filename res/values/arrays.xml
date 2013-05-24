@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="external_database_types">
+        <item>AWS</item>
+        <item>T2DRUPAL</item>
+        <item>T2Rest</item>
+    </string-array>
+
+</resources>

@@ -1,0 +1,19 @@
+<resources>
+
+    <string name="app_name">DataOutHandlerTest</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="preference_activity_main">PreferenceActivity</string>
+    <string name="login">Login</string>
+
+    <string name="database_uri"></string> 
+    <string name="default_t2rest_database_uri">http://t2health.us/mongo/json.php</string> 
+    <string name="default_aws_database_uri">h2tvm.elasticbeanstalk.com</string> 
+    <string name="external_database_type">external_database_type</string> 
+    <string name="database_type_aws">AWS</string>    
+    <string name="database_type_t2_rest">T2REST</string>    
+    <string name="database_type_drupal">T2DRUPAL</string>    
+    
+
+</resources>

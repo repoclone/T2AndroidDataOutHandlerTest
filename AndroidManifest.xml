@@ -1,0 +1,64 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.t2.dataouthandlertest"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="15" />
+
+    <uses-permission android:name="android.permission.INTERNET"/>  
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>    
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />        
+    
+    
+    <application
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".DataOutTestPreferences"
+            android:label="@string/preference_activity_main" >
+        </activity>
+        
+        <activity
+            android:name=".BioZenPreferenceActivity"
+            android:label="@string/preference_activity_main" >
+        </activity>
+        
+        <!-- For JanRain API's -->  
+		<activity
+		    android:name="com.janrain.android.engage.ui.JRFragmentHostActivity"
+		    android:configChanges="orientation|screenSize"
+		    android:theme="@style/Theme.Janrain.Dialog.Light"
+		    android:windowSoftInputMode="adjustResize|stateHidden"
+		    />
+		
+		<!-- This activity must have a normal (non-dialog) theme such as Theme, Theme.Light, Theme.Holo, etc.
+		
+		    Using android:theme="@style/Theme.Janrain" or "@style/Theme.Janrain.Light" will result in
+		    Theme (or Theme.Light) on API 4-10 and
+		    Theme.Holo (or Theme.Holo.Light) on API 11+
+		-->
+		<activity
+		    android:name="com.janrain.android.engage.ui.JRFragmentHostActivity$Fullscreen"
+		    android:configChanges="orientation|screenSize"
+		    android:theme="@style/Theme.Janrain.Light"
+		    android:windowSoftInputMode="adjustResize|stateHidden"
+		    />        
+		    
+        
+        
+    </application>
+
+</manifest>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+        <ListPreference
+                android:key="external_database_type" android:entries="@array/external_database_types" android:entryValues="@array/external_database_types" android:dialogTitle="External Database Type" android:summary="Selects External Database Type" android:title="External Database Type"/>
+    
+
+</PreferenceScreen>
