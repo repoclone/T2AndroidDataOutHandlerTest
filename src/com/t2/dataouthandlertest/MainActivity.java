@@ -6,16 +6,16 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Vector;
 
-import org.t2health.lib1.DataOutHandler;
-import org.t2health.lib1.DataOutHandlerException;
-import org.t2health.lib1.DataOutHandlerTags;
 import org.t2health.lib1.SharedPref;
-import org.t2health.lib1.DataOutHandler.DataOutPacket;
-import org.t2health.lib1.T2AuthDelegate;
 
 import com.janrain.android.engage.JREngageError;
 import com.janrain.android.engage.net.async.HttpResponseHeaders;
 import com.janrain.android.engage.types.JRDictionary;
+import com.t2.dataouthandler.DataOutHandler;
+import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
+import com.t2.dataouthandler.DataOutHandlerException;
+import com.t2.dataouthandler.DataOutHandlerTags;
+import com.t2.dataouthandler.T2AuthDelegate;
 
 
 
@@ -141,7 +141,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button logoutButton = (Button) findViewById(R.id.button_Logout);
 		logoutButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				mDataOutHandler.close();
+//				mDataOutHandler.close();
+				mDataOutHandler.logOut();
 			}
 		});        
         
