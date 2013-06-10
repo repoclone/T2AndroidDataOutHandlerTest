@@ -1,5 +1,13 @@
 package com.t2.dataouthandlertest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -12,10 +20,13 @@ import com.janrain.android.engage.JREngageError;
 import com.janrain.android.engage.net.async.HttpResponseHeaders;
 import com.janrain.android.engage.types.JRDictionary;
 import com.t2.dataouthandler.DataOutHandler;
-import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandler.DataOutHandlerException;
 import com.t2.dataouthandler.DataOutHandlerTags;
+import com.t2.dataouthandler.DataOutPacket;
 import com.t2.dataouthandler.T2AuthDelegate;
+//import com.t2.dataouthandler.DataOutHandler;
+//import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
+import com.t2.dataouthandlertest.Archiver.LoadException;
 
 
 
@@ -29,6 +40,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,7 +58,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	
 	private boolean mLoggingEnabled = false;
-	private boolean mLogCatEnabled = false;
+	private boolean mLogCatEnabled = true;
 	
 	private Context mContext;
 	private Activity mActivity;
@@ -108,8 +120,48 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 		if (mLogCatEnabled) {
 			mDataOutHandler.enableLogCat();
-		}  		
+		}  	
 		
+		
+//		DataOutPacket dataOutPacket = new DataOutPacket();
+//		dataOutPacket.add("int", 1);
+//		dataOutPacket.add("string", "2");
+//		dataOutPacket.add("long", 2L);
+//		dataOutPacket.add("double", 1.2345);
+//		Vector<String> taskVector = new Vector<String>();
+//		taskVector.add("one");
+//		taskVector.add("two");	
+//		dataOutPacket.add("vector", taskVector);
+//		
+//		Log.e(TAG, dataOutPacket.toString());
+//		
+//	     try {
+//				Archiver.asyncSave("packet1", dataOutPacket, mContext);
+//				int r = 0;
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}	
+//	     
+//	     
+//	     try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+//		DataOutPacket dataOutPacketRead;
+//
+//	     try {
+//	    	 dataOutPacket = Archiver.load("packet1", mContext);
+//
+//	    	 Log.e(TAG, dataOutPacket.toString());
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+	     
+	     
 	}
 	
 	void terminateDatabase() {
@@ -163,14 +215,20 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         
 //        // Set database type to AWS
-//        SharedPreferences.Editor prefsEditor = prefs.edit();
-//        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_aws));
-//        prefsEditor.commit();
+        SharedPreferences.Editor prefsEditor = prefs.edit();
+        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_aws));
+        prefsEditor.commit();
         
 //        // Set database type to DRUPAL
-        SharedPreferences.Editor prefsEditor = prefs.edit();
-        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_drupal));
-        prefsEditor.commit();
+//        SharedPreferences.Editor prefsEditor = prefs.edit();
+//        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_drupal));
+//        prefsEditor.commit();
+        
+//      // Set database type to T2
+//        SharedPreferences.Editor prefsEditor = prefs.edit();
+//        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_t2_rest));
+//        prefsEditor.commit();
+
         
         
 	    prefs.registerOnSharedPreferenceChangeListener(this);    
@@ -184,7 +242,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			String applicationVersion = info.versionName;
 			String versionString = APP_ID + " application version: " + applicationVersion;
 
-			DataOutPacket packet = mDataOutHandler.new DataOutPacket();
+//			DataOutPacket packet = mDataOutHandler.new DataOutPacket();
+			DataOutPacket packet = new DataOutPacket();
 			packet.add("version", versionString);
 			mDataOutHandler.handleDataOut(packet);				
 
@@ -227,7 +286,18 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void T2AuthSuccess(JRDictionary auth_info, String provider,
 			HttpResponseHeaders responseHeaders,String responsePayload) {
-		Log.e(TAG, "Login Successful");
+		
+		
+		
+        JRDictionary profile = (auth_info == null) ? null : auth_info.getAsDictionary("profile");
+        String identifier = (profile == null) ? "" : profile.getAsString("identifier");
+        String displayName = (profile == null) ? "" : profile.getAsString("displayName");
+        String verifiedEmail = (profile == null) ? "" : profile.getAsString("verifiedEmail");
+
+        Log.e(TAG, "Login Successful: " + "displayName = " + displayName + ", verifiedEmail = " + verifiedEmail);
+
+		
+		
         new AlertDialog.Builder(mContext).setMessage("Login was successful.").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
 
@@ -245,7 +315,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 * Sends a dummy packet to the database
 	 */
 	void addData() {
-		DataOutPacket packet = mDataOutHandler.new DataOutPacket();
+//		DataOutPacket packet = mDataOutHandler.new DataOutPacket();
+		DataOutPacket packet = new DataOutPacket();
 
 		// Throw in some dummy location data
 		packet.add(DataOutHandlerTags.version, "Test Version");
@@ -288,8 +359,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 
 		Vector<String> taskVector = new Vector<String>();
-			taskVector.add("one");
-			taskVector.add("two");
+		taskVector.add("one");
+		taskVector.add("two");
         	
 		packet.add(DataOutHandlerTags.TASKS, taskVector);
 
@@ -307,16 +378,13 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		wifiVector.add("ten");
 		
 		packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);			
-
-		
-		
-		
-		
 		try {
 			mDataOutHandler.handleDataOut(packet);
 		} catch (DataOutHandlerException e) {
 			Log.e(TAG, e.toString());
 			//e.printStackTrace();
-		}				
+		}	
+		
+		
 	}
 }
