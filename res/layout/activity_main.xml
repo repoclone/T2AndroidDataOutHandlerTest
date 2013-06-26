@@ -27,4 +27,13 @@
         android:layout_below="@+id/button_login"
         android:text="Add Data" />
 
+    <Button
+        android:id="@+id/button_TestData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/button_AddData"
+        android:layout_alignBottom="@+id/button_AddData"
+        android:layout_toRightOf="@+id/button_AddData"
+        android:text="Unit Test" />
+
 </RelativeLayout>

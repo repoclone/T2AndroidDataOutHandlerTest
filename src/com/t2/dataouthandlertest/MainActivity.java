@@ -9,6 +9,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -19,6 +20,7 @@ import org.t2health.lib1.SharedPref;
 import com.janrain.android.engage.JREngageError;
 import com.janrain.android.engage.net.async.HttpResponseHeaders;
 import com.janrain.android.engage.types.JRDictionary;
+import com.janrain.android.utils.StringUtils;
 import com.t2.dataouthandler.DataOutHandler;
 import com.t2.dataouthandler.DataOutHandlerException;
 import com.t2.dataouthandler.DataOutHandlerTags;
@@ -59,6 +61,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	private boolean mLoggingEnabled = false;
 	private boolean mLogCatEnabled = true;
+	
+	private String mDatabaseTypeString = "";
+	int mLargePacketLength;
+	int mTooLargePacketLength;
+	
 	
 	private Context mContext;
 	private Activity mActivity;
@@ -102,9 +109,25 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			mDataOutHandler.enableLogCat();
 			
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-			String databaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
+			mDatabaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
 			
-			mDataOutHandler.initializeDatabase( mRemoteDatabaseUri, databaseTypeString, this);
+			if (mDatabaseTypeString.equalsIgnoreCase(getString(R.string.database_type_drupal))) {
+				mLargePacketLength = 20000;
+				mTooLargePacketLength = 24000;
+			}
+			else if (mDatabaseTypeString.equalsIgnoreCase(getString(R.string.database_type_aws))) {
+				mLargePacketLength = 64000;
+				mTooLargePacketLength = 24001;
+			}
+			else {
+				mLargePacketLength = 64000;
+				mTooLargePacketLength = 24001;
+			}
+						
+			
+			
+			
+			mDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
 			mDataOutHandler.setRequiresAuthentication(false);
 			
 			
@@ -201,35 +224,32 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				addData();
+				sendTestPacketFullGood();
+				//fetchData();
 			}
 		});        
         
-        // We'll leave this blank, that way DataOutHandler will pick the default uri based on database type
+        Button testDataButton = (Button) findViewById(R.id.button_TestData);
+        testDataButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				unitTest();
+			}
+		});          
         
-//        mDefaultRemoteDatabaseUri = getResources().getString(R.string.default_aws_database_uri);	
+// 		We'll leave this blank, that way DataOutHandler will pick the default uri based on database type
+//      mDefaultRemoteDatabaseUri = getResources().getString(R.string.default_aws_database_uri);	
         mDefaultRemoteDatabaseUri = "";	
         mRemoteDatabaseUri = SharedPref.getString(this, "database_sync_name", mDefaultRemoteDatabaseUri);
         Log.d(TAG, "Remote database Uri = " + mRemoteDatabaseUri);	
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         
-//        // Set database type to AWS
+        
         SharedPreferences.Editor prefsEditor = prefs.edit();
-        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_aws));
+        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_drupal)); // Set database type to DRUPAL
+//      prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_aws)); // Set database type to AWS
+//      prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_t2_rest)); // Set database type to T2
         prefsEditor.commit();
-        
-//        // Set database type to DRUPAL
-//        SharedPreferences.Editor prefsEditor = prefs.edit();
-//        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_drupal));
-//        prefsEditor.commit();
-        
-//      // Set database type to T2
-//        SharedPreferences.Editor prefsEditor = prefs.edit();
-//        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_t2_rest));
-//        prefsEditor.commit();
-
-        
         
 	    prefs.registerOnSharedPreferenceChangeListener(this);    
         
@@ -311,80 +331,258 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         new AlertDialog.Builder(mContext).setMessage("Login not completed").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
 	
+	void fetchData() {
+		mDataOutHandler.drupalNodeGet("*");
+	}
+	
+	
+	// ------------------------------------------------------------------
+	// Test Cases
+	// ------------------------------------------------------------------
+	
+	/**
+	 * Performs unit test on system by sending various forms of data packets to server
+	 */
+	void unitTest() {
+		try {
+//			sendTestPacketFullGood();
+//			sendTestPacketEmpty();
+//			sendTestPacketNull();				// Should throw null pointer exception (but not crash)
+//			sendTestPacket1();			
+//			sendTestPacketLarge();			
+//			sendTestPacketTooLarge();	
+//			sendTestPacketEmptyJSONArray();	
+//			sendTestPacketJSONArrayTooManyLevels();
+			sendTestPacketRepeatedParameters();
+			sendTestPacketNumericAsStrings();
+			
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}			
+	}
+
+	void sendTestPacketNumericAsStrings() {
+		try {
+			Log.d(TAG, "sendTestPacketNumericAsStrings");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketNumericAsStrings");
+			packet.add(DataOutHandlerTags.ACCEL_X, String.valueOf((double) 11.11111));
+			packet.add(DataOutHandlerTags.ACCEL_Y, String.valueOf((double) 22.22222));
+			packet.add(DataOutHandlerTags.ACCEL_Z, String.valueOf((double) 33.33333));
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}	
+	
+	// Check that only the last of the repeated parameter is saved to the database
+	void sendTestPacketRepeatedParameters() {
+		try {
+			Log.d(TAG, "sendTestPacketRepeatedParameters");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketRepeatedParameters");
+			packet.add(DataOutHandlerTags.ACCEL_Z, (double) 11.11111);
+			packet.add(DataOutHandlerTags.ACCEL_Z, (double) 22.22222);			
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}	
+	
+	// Check that either record is saved or no record is saved (and no corruption of database)
+	
+	///TODO: put check in code to throw an exception for this
+	void sendTestPacketJSONArrayTooManyLevels() {
+		try {
+			Log.d(TAG, "sendTestPacketJSONArrayTooManyLevels");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketJSONArrayTooManyLevels");
+
+			
+			Vector<Vector> taskVector = new Vector<Vector>();
+			Vector<String> innerVector = new Vector<String>();
+			innerVector.add("one");
+
+			taskVector.add(innerVector);
+			
+			packet.add(DataOutHandlerTags.TASKS, taskVector);			
+			
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}
+
+	// Check that record is saved
+	void sendTestPacketEmptyJSONArray() {
+		try {
+			Log.d(TAG, "sendTestPacketEmptyJSONArray");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketEmptyJSONArray");
+			Vector<String> taskVector = new Vector<String>();
+			packet.add(DataOutHandlerTags.TASKS, taskVector);			
+			
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}
+	
+	// Check that record is saved
+	void sendTestPacketLarge() {
+		try {
+			Log.d(TAG, "sendTestPacketLarge");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketLarge");
+			
+			char[] array = new char[mLargePacketLength];
+			
+			for (int i = 0; i < mLargePacketLength; i++) {
+				int ones = i % 9;
+				array[i] = (char) (0x30 + ones);
+			}
+			
+			packet.add("test_field", new String(array));
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}
+	
+	
+	// Check that record is NOT saved (and no corruption of database)
+	void sendTestPacketTooLarge() {
+		try {
+			Log.d(TAG, "sendTestPacketTooLarge");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketTooLarge");
+			
+			char[] array = new char[mTooLargePacketLength];
+			
+			for (int i = 0; i < mTooLargePacketLength; i++) {
+				int ones = i % 9;
+				array[i] = (char) (0x30 + ones);
+			}
+			
+			packet.add("test_field", new String(array));
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}
+	
+	// Check that record is saved
+	void sendTestPacket1() {
+		try {
+			Log.d(TAG, "sendTestPacket1");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacket1");
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}		
+	}
+	
+	// Check that record is saved (only header data in record)
+	void sendTestPacketEmpty() {
+		try {
+			Log.d(TAG, "sendTestPacketEmpty");
+			DataOutPacket packet = new DataOutPacket();
+			packet.add(DataOutHandlerTags.version, "sendTestPacketEmpty");
+			
+			mDataOutHandler.handleDataOut(packet);		
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}			
+	}
+	
+
+	// Check exception is thrown (and no corruption of database)	
+	void sendTestPacketNull() {
+		try {
+			Log.d(TAG, "sendTestPacketNull");
+			mDataOutHandler.handleDataOut(null);	
+			
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}			
+	}
+	
+	
 	/**
 	 * Sends a dummy packet to the database
+	 * @throws DataOutHandlerException 
 	 */
-	void addData() {
-//		DataOutPacket packet = mDataOutHandler.new DataOutPacket();
-		DataOutPacket packet = new DataOutPacket();
-
-		// Throw in some dummy location data
-		packet.add(DataOutHandlerTags.version, "Test Version");
-		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 34.5678);
-		packet.add(DataOutHandlerTags.ACCEL_Y, (double) 34.5678);
-		packet.add(DataOutHandlerTags.ACCEL_X, (double) 34.5678);
-		packet.add(DataOutHandlerTags.ORIENT_Z, (double) 34.5678);
-		packet.add(DataOutHandlerTags.ORIENT_Y, (double) 34.5678);
-		packet.add(DataOutHandlerTags.ORIENT_X, (double) 34.5678);
-        packet.add(DataOutHandlerTags.LIGHT, (float) 1.0);
-        packet.add(DataOutHandlerTags.PROXIMITY, (float) 1.0);
-        packet.add(DataOutHandlerTags.BATTERY_LEVEL, (int) 1);
-        packet.add(DataOutHandlerTags.BATTERY_STATUS, (int) 1);
-	   	packet.add(DataOutHandlerTags.SCREEN, 1);
-	   	packet.add(DataOutHandlerTags.MODEL, "Galaxy S3");
-	   	packet.add(DataOutHandlerTags.LOCALE_LANGUAGE, "english");
-	   	packet.add(DataOutHandlerTags.LOCALE_COUNTRY, "usa");
-		packet.add(DataOutHandlerTags.TEL_CELLID, (int) 1);
-		packet.add(DataOutHandlerTags.TEL_MDN, (long) 123);
-		packet.add(DataOutHandlerTags.TEL_NETWORK, "verizon");
-        packet.add(DataOutHandlerTags.GPS_LON, (double) 34.5678);
-        packet.add(DataOutHandlerTags.GPS_LAT, (double) 34.5678);
-        packet.add(DataOutHandlerTags.GPS_SPEED, (float) 34.5678);
-        packet.add(DataOutHandlerTags.GPS_TIME, (long) 123456);
-        packet.add(DataOutHandlerTags.KEYLOCKED, 1);        	
-
-		packet.add(DataOutHandlerTags.BLUETOOTH_ENABLED, 1);			
-		packet.add(DataOutHandlerTags.WIFI_ENABLED, 0);			
-		packet.add(DataOutHandlerTags.WIFI_CONNECTED_AP, "fred");			
-		packet.add(DataOutHandlerTags.CALL_DIR, "in");
-		packet.add(DataOutHandlerTags.CALL_REMOTENUM, "2536779838");
-		packet.add(DataOutHandlerTags.CALL_DURATION, (int) 1);
-    	packet.add(DataOutHandlerTags.SMS_DIR, "out");
-		packet.add(DataOutHandlerTags.SMS_REMOTENUM, "2536779838");
-		packet.add(DataOutHandlerTags.SMS_LENGTH, (int) 1);
-		packet.add(DataOutHandlerTags.MMS_DIR, "in");
-		packet.add(DataOutHandlerTags.MMS_REMOTENUM, "2536779838");
-		packet.add(DataOutHandlerTags.MMS_LENGTH, (int) 1);
-    	packet.add(DataOutHandlerTags.WEBPAGE, "google.com");	    			
-
-
-		Vector<String> taskVector = new Vector<String>();
-		taskVector.add("one");
-		taskVector.add("two");
-        	
-		packet.add(DataOutHandlerTags.TASKS, taskVector);
-
-		Vector<String> bluetoothVector = new Vector<String>();
-		bluetoothVector.add("four");
-		bluetoothVector.add("five");
-		bluetoothVector.add("six");
-		
-		packet.add(DataOutHandlerTags.BLUETOOTH_PAIREDDEVICES, bluetoothVector);
-
-		Vector<String> wifiVector = new Vector<String>();
-		wifiVector.add("seven");
-		wifiVector.add("eight");
-		wifiVector.add("nine");
-		wifiVector.add("ten");
-		
-		packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);			
+	// Check that record is saved
+	void sendTestPacketFullGood() {
 		try {
-			mDataOutHandler.handleDataOut(packet);
-		} catch (DataOutHandlerException e) {
+			Log.d(TAG, "sendTestPacketFullGood");		
+			DataOutPacket packet = new DataOutPacket();
+
+			// Throw in some dummy location data
+			packet.add(DataOutHandlerTags.version, "Test Version");
+			packet.add(DataOutHandlerTags.ACCEL_Z, (double) 34.5678);
+			packet.add(DataOutHandlerTags.ACCEL_Y, (double) 34.5678);
+			packet.add(DataOutHandlerTags.ACCEL_X, (double) 34.5678);
+			packet.add(DataOutHandlerTags.ORIENT_Z, (double) 34.5678);
+			packet.add(DataOutHandlerTags.ORIENT_Y, (double) 34.5678);
+			packet.add(DataOutHandlerTags.ORIENT_X, (double) 34.5678);
+	        packet.add(DataOutHandlerTags.LIGHT, (float) 1.0);
+	        packet.add(DataOutHandlerTags.PROXIMITY, (float) 1.0);
+	        packet.add(DataOutHandlerTags.BATTERY_LEVEL, (int) 1);
+	        packet.add(DataOutHandlerTags.BATTERY_STATUS, (int) 1);
+		   	packet.add(DataOutHandlerTags.SCREEN, 1);
+		   	packet.add(DataOutHandlerTags.MODEL, "Galaxy S3");
+		   	packet.add(DataOutHandlerTags.LOCALE_LANGUAGE, "english");
+		   	packet.add(DataOutHandlerTags.LOCALE_COUNTRY, "usa");
+			packet.add(DataOutHandlerTags.TEL_CELLID, (int) 1);
+			packet.add(DataOutHandlerTags.TEL_MDN, (long) 123);
+			packet.add(DataOutHandlerTags.TEL_NETWORK, "verizon");
+	        packet.add(DataOutHandlerTags.GPS_LON, (double) 34.5678);
+	        packet.add(DataOutHandlerTags.GPS_LAT, (double) 34.5678);
+	        packet.add(DataOutHandlerTags.GPS_SPEED, (float) 34.5678);
+	        packet.add(DataOutHandlerTags.GPS_TIME, (long) 123456);
+	        packet.add(DataOutHandlerTags.KEYLOCKED, 1);        	
+
+			packet.add(DataOutHandlerTags.BLUETOOTH_ENABLED, 1);			
+			packet.add(DataOutHandlerTags.WIFI_ENABLED, 0);			
+			packet.add(DataOutHandlerTags.WIFI_CONNECTED_AP, "fred");			
+			packet.add(DataOutHandlerTags.CALL_DIR, "in");
+			packet.add(DataOutHandlerTags.CALL_REMOTENUM, "2536779838");
+			packet.add(DataOutHandlerTags.CALL_DURATION, (int) 1);
+	    	packet.add(DataOutHandlerTags.SMS_DIR, "out");
+			packet.add(DataOutHandlerTags.SMS_REMOTENUM, "2536779838");
+			packet.add(DataOutHandlerTags.SMS_LENGTH, (int) 1);
+			packet.add(DataOutHandlerTags.MMS_DIR, "in");
+			packet.add(DataOutHandlerTags.MMS_REMOTENUM, "2536779838");
+			packet.add(DataOutHandlerTags.MMS_LENGTH, (int) 1);
+	    	packet.add(DataOutHandlerTags.WEBPAGE, "google.com");	    			
+
+
+			Vector<String> taskVector = new Vector<String>();
+			taskVector.add("one");
+			taskVector.add("two");
+	        	
+			packet.add(DataOutHandlerTags.TASKS, taskVector);
+
+			Vector<String> bluetoothVector = new Vector<String>();
+			bluetoothVector.add("four");
+			bluetoothVector.add("five");
+			bluetoothVector.add("six");
+			
+			packet.add(DataOutHandlerTags.BLUETOOTH_PAIREDDEVICES, bluetoothVector);
+
+			Vector<String> wifiVector = new Vector<String>();
+			wifiVector.add("seven");
+			wifiVector.add("eight");
+			wifiVector.add("nine");
+			wifiVector.add("ten");
+			
+			packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);			
+				mDataOutHandler.handleDataOut(packet);
+		} catch (Exception e) {
 			Log.e(TAG, e.toString());
-			//e.printStackTrace();
-		}	
-		
+		}			
 		
 	}
 }
