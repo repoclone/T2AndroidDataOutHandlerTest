@@ -177,45 +177,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			mDataOutHandler.enableLogCat();
 		}  	
 		
-		
-//		DataOutPacket dataOutPacket = new DataOutPacket();
-//		dataOutPacket.add("int", 1);
-//		dataOutPacket.add("string", "2");
-//		dataOutPacket.add("long", 2L);
-//		dataOutPacket.add("double", 1.2345);
-//		Vector<String> taskVector = new Vector<String>();
-//		taskVector.add("one");
-//		taskVector.add("two");	
-//		dataOutPacket.add("vector", taskVector);
-//		
-//		Log.e(TAG, dataOutPacket.toString());
-//		
-//	     try {
-//				Archiver.asyncSave("packet1", dataOutPacket, mContext);
-//				int r = 0;
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}	
-//	     
-//	     
-//	     try {
-//			Thread.sleep(2000);
-//		} catch (InterruptedException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		DataOutPacket dataOutPacketRead;
-//
-//	     try {
-//	    	 dataOutPacket = Archiver.load("packet1", mContext);
-//
-//	    	 Log.e(TAG, dataOutPacket.toString());
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-	     
 	     
 	}
 	
@@ -256,8 +217,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				sendTestPacketFullGood();
-				//fetchData();
+				//sendTestPacketFullGood();
+				fetchData();
 			}
 		});        
         
@@ -364,7 +325,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 	
 	void fetchData() {
-		mDataOutHandler.drupalNodeGet("*");
+		mDataOutHandler.getRemoteDrupalNodes();
 	}
 	
 	
