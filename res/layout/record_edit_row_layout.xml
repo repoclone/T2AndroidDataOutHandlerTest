@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal"
+    android:weightSum="1" >
+
+    <TextView
+        android:id="@+id/key"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight=".25"
+        android:lines="2"
+        android:singleLine="true"
+        android:text="platform_version"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <TextView
+        android:id="@+id/value"
+        android:layout_weight=".5"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:text="two"
+        android:textAppearance="?android:attr/textAppearanceSmall" 
+        />
+
+    <Button
+        android:id="@+id/buttonEdit1"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_weight=".25"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Edit" />
+    
+
+  
+</LinearLayout>    

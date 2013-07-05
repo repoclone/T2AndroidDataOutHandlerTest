@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:minHeight="50dip">
+    
+
+        
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight="1.0"
+        android:gravity="center_vertical"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:singleLine="false" />
+    
+    <Button
+        android:id="@+id/button_edit"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:focusable="false"
+        android:text="E"
+        android:textAppearance="@android:style/TextAppearance.Small" >
+</Button> 
+        
+    <Button 
+        android:text="D" 
+        android:id="@+id/button_delete" 
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:focusable="false"
+        ></Button>      
+</LinearLayout>

@@ -27,6 +27,12 @@
         </activity>
 
         <activity
+            android:name=".EditRecordActivity"
+            android:label="EditRecordActivity" >
+        </activity>
+        
+        
+        <activity
             android:name=".DataOutTestPreferences"
             android:label="@string/preference_activity_main" >
         </activity>

@@ -41,9 +41,12 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
@@ -61,6 +64,7 @@ import com.t2.dataouthandler.T2AuthDelegate;
 //import com.t2.dataouthandler.DataOutHandler;
 //import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
+import com.t2.drupalsdk.DrupalUpdateListener;
 
 
 
@@ -75,20 +79,33 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
 import android.support.v4.app.NavUtils;
 
-public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate {
+public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
+	DrupalUpdateListener, OnItemClickListener  {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	private static final String APP_ID = "DataOutHandlerTest";	
 	private static final String NOT_USED_STRING = "";
 	private static final Long NOT_USED_LONG = (long) 0;
+	
+	public static final int ACTIVITY_REFERENCE = 0x302;		
 	
 	
 	private boolean mLoggingEnabled = false;
@@ -101,6 +118,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	private Context mContext;
 	private Activity mActivity;
+	
+	private ListView listview;	
 	
 	/**
 	 * Default Server database to sync to
@@ -192,12 +211,103 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		super.onDestroy();
 	}
 
+    public class DataOutPacketArrayAdapter extends ArrayAdapter<DataOutPacket> {
+  	  private final Context context;
+
+  	  public DataOutPacketArrayAdapter(Context context, List<DataOutPacket> values) {
+  	    super(context, R.layout.row_layout, values);
+  	    this.context = context;
+  	  }
+
+  	  @Override
+  	  public View getView(final int position, View convertView, ViewGroup parent) {
+  	    LayoutInflater inflater = (LayoutInflater) context
+  	        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		final int buttonposition = position;	  	    
+  	    
+  	    View rowView = inflater.inflate(R.layout.manager_item, parent, false);
+  	    TextView textView = (TextView) rowView.findViewById(R.id.label);
+  	    
+  	    final DataOutPacket item = this.getItem(position);  	    
+  	    textView.setText(item.mId);
+
+  	    
+  	    Button editButton = (Button) rowView.findViewById(R.id.button_edit);
+  	    editButton.setOnClickListener(new View.OnClickListener() {
+  	         public void onClick(View v) {
+  	        	 Log.e(TAG, "Edit Button " + buttonposition);
+				Intent intent = new Intent(mContext, EditRecordActivity.class);
+				// Send the currently selected DataOutPacked for editing
+				Bundle args = new Bundle();
+				args.putSerializable("EXISTINGITEM", item);
+				intent.putExtras(args);
+				startActivityForResult(intent, ACTIVITY_REFERENCE);				
+				
+				
+  	         }
+  	    });
+  	    
+  	    Button deleteButton = (Button) rowView.findViewById(R.id.button_delete);
+  	    deleteButton.setOnClickListener(new View.OnClickListener() {
+  	         public void onClick(View v) {
+  	        	 Log.e(TAG, "Delete Button " + buttonposition);
+ 				// Now save the updated record to Drupal
+ 				// Also need to update mDataOutHandler.mRemoteDrupalPacketList
+
+ 				try {
+ 					mDataOutHandler.deleteRecord(item);
+ 				} catch (DataOutHandlerException e) {
+ 					Log.e(TAG, e.toString());
+ 					e.printStackTrace();
+ 				}
+
+ 				drupalUpdateComplete();
+  	        	 
+  			  	        	 
+  	         }
+  	    });  	    
+  	    
+//  	    Button deleteButton = (Button) rowView.findViewById(R.id.delete);
+//  	    editButton.setOnClickListener(new View.OnClickListener() {
+//  	         public void onClick(View v) {
+//  	        	 Log.e(TAG, "Button " + buttonposition);
+//  	        	 Log.e(TAG, "2");
+//  				Intent intent = new Intent(mContext, EditRecordActivity.class);
+//  				Bundle bundle = new Bundle();
+//  				// TODO maybe put the entire record in as serializable (see pill planner)
+//  				bundle.putInt("article_id",position);  				
+//  				intent.putExtras(bundle);				
+//  				startActivity(intent);	
+//  	         }
+//  	    });
+  	    
+  	    return rowView;
+  	  }
+  	}       
+    
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContext = this;
         mActivity = this;
+        
+        listview = (ListView) findViewById(R.id.listView1);
+        
+        listview.setOnItemClickListener(this);        
+        
+        // We don't put anything in the view until we get the callback drupalUpdateComplete()
+
+    	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
+        DataOutPacket pkt = new DataOutPacket();
+        fakePacketList.add(pkt);
+        pkt = new DataOutPacket();
+        fakePacketList.add(pkt);
+        
+        DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, fakePacketList);
+        listview.setAdapter(adapter2);        
+        
         
         Button loginButton = (Button) findViewById(R.id.button_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -217,7 +327,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				//sendTestPacketFullGood();
+				sendTestPacketFullGood();
+				drupalUpdateComplete();
+				
+			}
+		});        
+        
+        Button updateDataButton = (Button) findViewById(R.id.button_update);
+        updateDataButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
 				fetchData();
 			}
 		});        
@@ -325,7 +443,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 	
 	void fetchData() {
-		mDataOutHandler.getRemoteDrupalNodes();
+		mDataOutHandler.getRemoteDrupalNodes(this);
 	}
 	
 	
@@ -572,10 +690,64 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			wifiVector.add("ten");
 			
 			packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);			
-				mDataOutHandler.handleDataOut(packet);
+			mDataOutHandler.handleDataOut(packet);
+			
+			
+			
 		} catch (Exception e) {
 			Log.e(TAG, e.toString());
 		}			
 		
 	}
+
+	@Override
+	public void drupalUpdateComplete() {
+		ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketList.values());
+		
+		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, packetList);
+//		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, mDataOutHandler.mRemoteDrupalPacketList);
+        listview.setAdapter(adapter2);        
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+
+		
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		
+		switch(requestCode) {
+		
+		/// This gets called after EditRecord saves a record
+		case ACTIVITY_REFERENCE:
+			if (data != null) {
+				Bundle extras = data.getExtras();
+				DataOutPacket updatedPacket = (DataOutPacket) extras.getSerializable("EXISTINGITEM");
+				Log.e(TAG, updatedPacket.toString());			
+				
+				// Now save the updated record to Drupal
+				// Also need to update mDataOutHandler.mRemoteDrupalPacketList
+
+				try {
+					mDataOutHandler.updateRecord(updatedPacket);
+				} catch (DataOutHandlerException e) {
+					Log.e(TAG, e.toString());
+					e.printStackTrace();
+				}
+
+				drupalUpdateComplete();
+				
+				
+			}
+			break;
+		}
+		
+		
+	}
+	
+	
+	
 }
