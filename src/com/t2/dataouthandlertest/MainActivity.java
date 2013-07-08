@@ -159,6 +159,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			mDataOutHandler.enableLogging(this);
 			mDataOutHandler.enableLogCat();
 			
+			mDataOutHandler.setDrupalUpdateListener(this);
+			
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 			mDatabaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
 			
@@ -262,7 +264,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
  					e.printStackTrace();
  				}
 
- 				drupalUpdateComplete();
+ 				drupalReadComplete(); // TODO - change this to callback
   	        	 
   			  	        	 
   	         }
@@ -328,15 +330,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				sendTestPacketFullGood();
-				drupalUpdateComplete();
+ 				drupalReadComplete(); // TODO - change this to callback
 				
 			}
 		});        
         
-        Button updateDataButton = (Button) findViewById(R.id.button_update);
+        Button updateDataButton = (Button) findViewById(R.id.button_fetch_all);
         updateDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				fetchData();
+				fetchAllData();
 			}
 		});        
         
@@ -442,7 +444,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         new AlertDialog.Builder(mContext).setMessage("Login not completed").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
 	
-	void fetchData() {
+	
+	/**
+	 * Cause the DataOutHandler to update arrays from Remote Drupal database
+	 * 	mRemoteDrupalNodeIdList
+	 *  mRemoteDrupalPacketList
+	 * 
+	 */
+	void fetchAllData() {
 		mDataOutHandler.getRemoteDrupalNodes(this);
 	}
 	
@@ -452,11 +461,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	// ------------------------------------------------------------------
 	
 	/**
-	 * Performs unit test on system by sending various forms of data packets to server
+	 * Performs unit tests on system by sending various forms of data packets to server
 	 */
 	void unitTest() {
 		try {
-//			sendTestPacketFullGood();
+			sendTestPacketFullGood();
 //			sendTestPacketEmpty();
 //			sendTestPacketNull();				// Should throw null pointer exception (but not crash)
 //			sendTestPacket1();			
@@ -464,8 +473,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 //			sendTestPacketTooLarge();	
 //			sendTestPacketEmptyJSONArray();	
 //			sendTestPacketJSONArrayTooManyLevels();
-			sendTestPacketRepeatedParameters();
-			sendTestPacketNumericAsStrings();
+//			sendTestPacketRepeatedParameters();
+//			sendTestPacketNumericAsStrings();
 			
 		} catch (Exception e) {
 			Log.e(TAG, e.toString());
@@ -701,13 +710,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 
 	@Override
-	public void drupalUpdateComplete() {
+	public void drupalReadComplete() {
 		ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketList.values());
 		
 		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, packetList);
 //		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, mDataOutHandler.mRemoteDrupalPacketList);
         listview.setAdapter(adapter2);        
 	}
+	
+	void UpdateListView() {
+		
+	}
+	
+	
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -738,7 +753,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					e.printStackTrace();
 				}
 
-				drupalUpdateComplete();
+ 				drupalReadComplete(); // TODO - change this to callback
 				
 				
 			}
@@ -747,7 +762,32 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 		
 	}
+
+	/* (non-Javadoc)
+	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalCreateUpdateComplete(java.lang.String)
+	 * drupal has been successfully updated from this client.
+	 * the parameter msg contains the update message.
+	 * For node updates it contains the node id.
+	 * For array updates it contains "[true].
+	 */
+	@Override
+	public void drupalCreateUpdateComplete(String msg) {
+		Log.e(TAG, "got here - create/update");
+		
+	}
 	
-	
+	/* (non-Javadoc)
+	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalCreateUpdateComplete(java.lang.String)
+	 * drupal has been successfully updated from this client.
+	 * the parameter msg contains the update message.
+	 * For node updates it contains the node id.
+	 * For array updates it contains "[true].
+	 */
+	@Override
+	public void drupalDeleteComplete(String msg) {
+		Log.e(TAG, "got here - delete");
+		
+	}
+		
 	
 }
