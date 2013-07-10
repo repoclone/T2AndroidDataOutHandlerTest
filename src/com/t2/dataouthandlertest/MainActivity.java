@@ -132,7 +132,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	private String mRemoteDatabaseUri;	
 	
+	private DataOutPacket mPacketUnderTest = null;
+
+	private DataOutPacket mPacketTestResult = null;
 	
+	private String mPacketTestResultNodeId = null;
 	
 	/**
 	 * Class to help in saving received data to H2
@@ -329,7 +333,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				sendTestPacketFullGood();
+				DataOutPacket packet = generatePacketFullGood();
+				SendPacket(packet);			
+				
  				drupalReadComplete(); // TODO - change this to callback
 				
 			}
@@ -464,255 +470,264 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	void unitTest() {
 		try {
-			sendTestPacketFullGood();
-//			sendTestPacketEmpty();
-//			sendTestPacketNull();				// Should throw null pointer exception (but not crash)
-//			sendTestPacket1();			
-//			sendTestPacketLarge();			
-//			sendTestPacketTooLarge();	
-//			sendTestPacketEmptyJSONArray();	
-//			sendTestPacketJSONArrayTooManyLevels();
-//			sendTestPacketRepeatedParameters();
-//			sendTestPacketNumericAsStrings();
+			
+			int testCase = 1;
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
+			DataOutPacket packet = generatePacketFullGood();
+			TestPacket(packet, String.valueOf(testCase++));			
+			
+
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmpty");
+			packet = generateTestPacketEmpty();
+			TestPacket(packet, String.valueOf(testCase++));			
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNull");
+			packet = generateTestPacketNull();				// Should throw null pointer exception (but not crash)
+			try {
+				TestPacket(packet, String.valueOf(testCase++));
+			} catch (Exception e) {
+				Log.d(TAG, e.toString());
+			}			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
+			packet = generateTestPacketMinimalVersionOnly();			
+			TestPacket(packet, String.valueOf(testCase++));			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketLarge");
+			packet = generateTestPacketLarge();			
+			TestPacket(packet, String.valueOf(testCase++));			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketTooLarge");
+			packet = generateTestPacketTooLarge();	
+			TestPacket(packet, String.valueOf(testCase++));			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmptyJSONArray");
+			packet = generateTestPacketEmptyJSONArray();	
+			TestPacket(packet, String.valueOf(testCase++));			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketJSONArrayTooManyLevels");
+			packet = generateTestPacketJSONArrayTooManyLevels();
+			TestPacket(packet, String.valueOf(testCase++));			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketRepeatedParameters");
+			packet = generateTestPacketRepeatedParameters();
+			TestPacket(packet, String.valueOf(testCase++));			
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
+			packet = generateTestPacketNumericAsStrings();
+			TestPacket(packet, String.valueOf(testCase++));			
 			
 		} catch (Exception e) {
 			Log.e(TAG, e.toString());
 		}			
 	}
 
-	void sendTestPacketNumericAsStrings() {
-		try {
-			Log.d(TAG, "sendTestPacketNumericAsStrings");
+	DataOutPacket generateTestPacketNumericAsStrings() {
 			DataOutPacket packet = new DataOutPacket();
 			packet.add(DataOutHandlerTags.version, "sendTestPacketNumericAsStrings");
 			packet.add(DataOutHandlerTags.ACCEL_X, String.valueOf((double) 11.11111));
 			packet.add(DataOutHandlerTags.ACCEL_Y, String.valueOf((double) 22.22222));
 			packet.add(DataOutHandlerTags.ACCEL_Z, String.valueOf((double) 33.33333));
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+			return packet;
 	}	
 	
 	// Check that only the last of the repeated parameter is saved to the database
-	void sendTestPacketRepeatedParameters() {
-		try {
-			Log.d(TAG, "sendTestPacketRepeatedParameters");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacketRepeatedParameters");
-			packet.add(DataOutHandlerTags.ACCEL_Z, (double) 11.11111);
-			packet.add(DataOutHandlerTags.ACCEL_Z, (double) 22.22222);			
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+	DataOutPacket generateTestPacketRepeatedParameters() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacketRepeatedParameters");
+		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 11.11111);
+		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 22.22222);			
+		return packet;
 	}	
 	
 	// Check that either record is saved or no record is saved (and no corruption of database)
 	
 	///TODO: put check in code to throw an exception for this
-	void sendTestPacketJSONArrayTooManyLevels() {
-		try {
-			Log.d(TAG, "sendTestPacketJSONArrayTooManyLevels");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacketJSONArrayTooManyLevels");
-
-			
-			Vector<Vector> taskVector = new Vector<Vector>();
-			Vector<String> innerVector = new Vector<String>();
-			innerVector.add("one");
-
-			taskVector.add(innerVector);
-			
-			packet.add(DataOutHandlerTags.TASKS, taskVector);			
-			
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+	DataOutPacket generateTestPacketJSONArrayTooManyLevels() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacketJSONArrayTooManyLevels");
+		Vector<Vector> taskVector = new Vector<Vector>();
+		Vector<String> innerVector = new Vector<String>();
+		innerVector.add("one");
+		taskVector.add(innerVector);
+		packet.add(DataOutHandlerTags.TASKS, taskVector);			
+		return packet;	
 	}
 
 	// Check that record is saved
-	void sendTestPacketEmptyJSONArray() {
-		try {
-			Log.d(TAG, "sendTestPacketEmptyJSONArray");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacketEmptyJSONArray");
-			Vector<String> taskVector = new Vector<String>();
-			packet.add(DataOutHandlerTags.TASKS, taskVector);			
-			
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+	DataOutPacket generateTestPacketEmptyJSONArray() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacketEmptyJSONArray");
+		Vector<String> taskVector = new Vector<String>();
+		packet.add(DataOutHandlerTags.TASKS, taskVector);			
+		return packet;	
 	}
 	
 	// Check that record is saved
-	void sendTestPacketLarge() {
-		try {
-			Log.d(TAG, "sendTestPacketLarge");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacketLarge");
-			
-			char[] array = new char[mLargePacketLength];
-			
-			for (int i = 0; i < mLargePacketLength; i++) {
-				int ones = i % 9;
-				array[i] = (char) (0x30 + ones);
-			}
-			
-			packet.add("test_field", new String(array));
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+	DataOutPacket generateTestPacketLarge() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacketLarge");
+		
+		char[] array = new char[mLargePacketLength];
+		
+		for (int i = 0; i < mLargePacketLength; i++) {
+			int ones = i % 9;
+			array[i] = (char) (0x30 + ones);
+		}
+		
+		packet.add("test_field", new String(array));
+		return packet;	
 	}
 	
 	
 	// Check that record is NOT saved (and no corruption of database)
-	void sendTestPacketTooLarge() {
-		try {
-			Log.d(TAG, "sendTestPacketTooLarge");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacketTooLarge");
-			
-			char[] array = new char[mTooLargePacketLength];
-			
-			for (int i = 0; i < mTooLargePacketLength; i++) {
-				int ones = i % 9;
-				array[i] = (char) (0x30 + ones);
-			}
-			
-			packet.add("test_field", new String(array));
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+	DataOutPacket generateTestPacketTooLarge() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacketTooLarge");
+		
+		char[] array = new char[mTooLargePacketLength];
+		
+		for (int i = 0; i < mTooLargePacketLength; i++) {
+			int ones = i % 9;
+			array[i] = (char) (0x30 + ones);
+		}
+		
+		packet.add("test_field", new String(array));
+		return packet;	
 	}
 	
 	// Check that record is saved
-	void sendTestPacket1() {
-		try {
-			Log.d(TAG, "sendTestPacket1");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacket1");
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}		
+	DataOutPacket generateTestPacketMinimalVersionOnly() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacket1");
+		return packet;	
 	}
 	
 	// Check that record is saved (only header data in record)
-	void sendTestPacketEmpty() {
-		try {
-			Log.d(TAG, "sendTestPacketEmpty");
-			DataOutPacket packet = new DataOutPacket();
-			packet.add(DataOutHandlerTags.version, "sendTestPacketEmpty");
-			
-			mDataOutHandler.handleDataOut(packet);		
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}			
+	DataOutPacket generateTestPacketEmpty() {
+		DataOutPacket packet = new DataOutPacket();
+		packet.add(DataOutHandlerTags.version, "sendTestPacketEmpty");
+		return packet;	
 	}
 	
 
 	// Check exception is thrown (and no corruption of database)	
-	void sendTestPacketNull() {
-		try {
-			Log.d(TAG, "sendTestPacketNull");
-			mDataOutHandler.handleDataOut(null);	
-			
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}			
+	DataOutPacket generateTestPacketNull() {
+		return null;
 	}
-	
-	
+
 	/**
-	 * Sends a dummy packet to the database
-	 * @throws DataOutHandlerException 
+	 * Sends the requested packet to the DataOutHandler for Create/Update
+	 * @param packet
 	 */
-	// Check that record is saved
-	void sendTestPacketFullGood() {
+	void SendPacket(DataOutPacket packet) {
+		mPacketUnderTest = packet;
 		try {
-			Log.d(TAG, "sendTestPacketFullGood");		
-			DataOutPacket packet = new DataOutPacket();
-
-			// Throw in some dummy location data
-			packet.add(DataOutHandlerTags.version, "Test Version");
-			packet.add(DataOutHandlerTags.ACCEL_Z, (double) 34.5678);
-			packet.add(DataOutHandlerTags.ACCEL_Y, (double) 34.5678);
-			packet.add(DataOutHandlerTags.ACCEL_X, (double) 34.5678);
-			packet.add(DataOutHandlerTags.ORIENT_Z, (double) 34.5678);
-			packet.add(DataOutHandlerTags.ORIENT_Y, (double) 34.5678);
-			packet.add(DataOutHandlerTags.ORIENT_X, (double) 34.5678);
-	        packet.add(DataOutHandlerTags.LIGHT, (float) 1.0);
-	        packet.add(DataOutHandlerTags.PROXIMITY, (float) 1.0);
-	        packet.add(DataOutHandlerTags.BATTERY_LEVEL, (int) 1);
-	        packet.add(DataOutHandlerTags.BATTERY_STATUS, (int) 1);
-		   	packet.add(DataOutHandlerTags.SCREEN, 1);
-		   	packet.add(DataOutHandlerTags.MODEL, "Galaxy S3");
-		   	packet.add(DataOutHandlerTags.LOCALE_LANGUAGE, "english");
-		   	packet.add(DataOutHandlerTags.LOCALE_COUNTRY, "usa");
-			packet.add(DataOutHandlerTags.TEL_CELLID, (int) 1);
-			packet.add(DataOutHandlerTags.TEL_MDN, (long) 123);
-			packet.add(DataOutHandlerTags.TEL_NETWORK, "verizon");
-	        packet.add(DataOutHandlerTags.GPS_LON, (double) 34.5678);
-	        packet.add(DataOutHandlerTags.GPS_LAT, (double) 34.5678);
-	        packet.add(DataOutHandlerTags.GPS_SPEED, (float) 34.5678);
-	        packet.add(DataOutHandlerTags.GPS_TIME, (long) 123456);
-	        packet.add(DataOutHandlerTags.KEYLOCKED, 1);        	
-
-			packet.add(DataOutHandlerTags.BLUETOOTH_ENABLED, 1);			
-			packet.add(DataOutHandlerTags.WIFI_ENABLED, 0);			
-			packet.add(DataOutHandlerTags.WIFI_CONNECTED_AP, "fred");			
-			packet.add(DataOutHandlerTags.CALL_DIR, "in");
-			packet.add(DataOutHandlerTags.CALL_REMOTENUM, "2536779838");
-			packet.add(DataOutHandlerTags.CALL_DURATION, (int) 1);
-	    	packet.add(DataOutHandlerTags.SMS_DIR, "out");
-			packet.add(DataOutHandlerTags.SMS_REMOTENUM, "2536779838");
-			packet.add(DataOutHandlerTags.SMS_LENGTH, (int) 1);
-			packet.add(DataOutHandlerTags.MMS_DIR, "in");
-			packet.add(DataOutHandlerTags.MMS_REMOTENUM, "2536779838");
-			packet.add(DataOutHandlerTags.MMS_LENGTH, (int) 1);
-	    	packet.add(DataOutHandlerTags.WEBPAGE, "google.com");	    			
-
-
-			Vector<String> taskVector = new Vector<String>();
-			taskVector.add("one");
-			taskVector.add("two");
-	        	
-			packet.add(DataOutHandlerTags.TASKS, taskVector);
-
-			Vector<String> bluetoothVector = new Vector<String>();
-			bluetoothVector.add("four");
-			bluetoothVector.add("five");
-			bluetoothVector.add("six");
-			
-			packet.add(DataOutHandlerTags.BLUETOOTH_PAIREDDEVICES, bluetoothVector);
-
-			Vector<String> wifiVector = new Vector<String>();
-			wifiVector.add("seven");
-			wifiVector.add("eight");
-			wifiVector.add("nine");
-			wifiVector.add("ten");
-			
-			packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);			
 			mDataOutHandler.handleDataOut(packet);
-			
-			
-			
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}			
-		
+		} catch (DataOutHandlerException e) {
+			e.printStackTrace();
+		}		
 	}
+			
 
+	boolean TestPacket(DataOutPacket packet, String testCase) {
+		mPacketUnderTest = packet;
+		try {
+			mDataOutHandler.handleDataOut(packet);
+		} catch (DataOutHandlerException e) {
+			e.printStackTrace();
+		}
+		
+		while (mPacketTestResultNodeId == null);
+		
+		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
+		mPacketTestResultNodeId = null;
+		
+		
+		if (resultPacket.equals(mPacketUnderTest)) {
+			Log.d(TAG, "Test Case " + testCase + " PASSED");
+			return true;
+		}
+		else {
+			Log.e(TAG, "Test Case " + testCase + " FAILED");
+			return false;
+		}
+	}
+	
+	
+	
+	DataOutPacket generatePacketFullGood() {
+		DataOutPacket packet = new DataOutPacket();
+
+		// Throw in some dummy location data
+		packet.add(DataOutHandlerTags.version, "Test Version");
+		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 34.5678);
+		packet.add(DataOutHandlerTags.ACCEL_Y, (double) 34.5678);
+		packet.add(DataOutHandlerTags.ACCEL_X, (double) 34.5678);
+		packet.add(DataOutHandlerTags.ORIENT_Z, (double) 34.5678);
+		packet.add(DataOutHandlerTags.ORIENT_Y, (double) 34.5678);
+		packet.add(DataOutHandlerTags.ORIENT_X, (double) 34.5678);
+        packet.add(DataOutHandlerTags.LIGHT, (float) 1.0);
+        packet.add(DataOutHandlerTags.PROXIMITY, (float) 1.0);
+        packet.add(DataOutHandlerTags.BATTERY_LEVEL, (int) 1);
+        packet.add(DataOutHandlerTags.BATTERY_STATUS, (int) 1);
+	   	packet.add(DataOutHandlerTags.SCREEN, 1);
+	   	packet.add(DataOutHandlerTags.MODEL, "Galaxy S3");
+	   	packet.add(DataOutHandlerTags.LOCALE_LANGUAGE, "english");
+	   	packet.add(DataOutHandlerTags.LOCALE_COUNTRY, "usa");
+		packet.add(DataOutHandlerTags.TEL_CELLID, (int) 1);
+		packet.add(DataOutHandlerTags.TEL_MDN, (long) 123);
+		packet.add(DataOutHandlerTags.TEL_NETWORK, "verizon");
+        packet.add(DataOutHandlerTags.GPS_LON, (double) 34.5678);
+        packet.add(DataOutHandlerTags.GPS_LAT, (double) 34.5678);
+        packet.add(DataOutHandlerTags.GPS_SPEED, (float) 34.5678);
+        packet.add(DataOutHandlerTags.GPS_TIME, (long) 123456);
+        packet.add(DataOutHandlerTags.KEYLOCKED, 1);        	
+
+		packet.add(DataOutHandlerTags.BLUETOOTH_ENABLED, 1);			
+		packet.add(DataOutHandlerTags.WIFI_ENABLED, 0);			
+		packet.add(DataOutHandlerTags.WIFI_CONNECTED_AP, "fred");			
+		packet.add(DataOutHandlerTags.CALL_DIR, "in");
+		packet.add(DataOutHandlerTags.CALL_REMOTENUM, "2536779838");
+		packet.add(DataOutHandlerTags.CALL_DURATION, (int) 1);
+    	packet.add(DataOutHandlerTags.SMS_DIR, "out");
+		packet.add(DataOutHandlerTags.SMS_REMOTENUM, "2536779838");
+		packet.add(DataOutHandlerTags.SMS_LENGTH, (int) 1);
+		packet.add(DataOutHandlerTags.MMS_DIR, "in");
+		packet.add(DataOutHandlerTags.MMS_REMOTENUM, "2536779838");
+		packet.add(DataOutHandlerTags.MMS_LENGTH, (int) 1);
+    	packet.add(DataOutHandlerTags.WEBPAGE, "google.com");	    			
+
+
+		Vector<String> taskVector = new Vector<String>();
+		taskVector.add("one");
+		taskVector.add("two");
+        	
+		packet.add(DataOutHandlerTags.TASKS, taskVector);
+
+		Vector<String> bluetoothVector = new Vector<String>();
+		bluetoothVector.add("four");
+		bluetoothVector.add("five");
+		bluetoothVector.add("six");
+		
+		packet.add(DataOutHandlerTags.BLUETOOTH_PAIREDDEVICES, bluetoothVector);
+
+		Vector<String> wifiVector = new Vector<String>();
+		wifiVector.add("seven");
+		wifiVector.add("eight");
+		wifiVector.add("nine");
+		wifiVector.add("ten");
+		
+		packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);	
+		return packet;
+	}
+	
+	
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-
-		
 	}
 
 	@Override
@@ -739,29 +754,28 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				}
 
  				drupalReadComplete(); // TODO - change this to callback
-				
-				
 			}
 			break;
 		}
-		
-		
 	}
 
 	/* (non-Javadoc)
 	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalCreateUpdateComplete(java.lang.String)
 	 * drupal has been successfully updated from this client.
+	 * 
+	 *  mRemoteDrupalPacketCache has been updated
+	 *  
 	 * the parameter msg contains the update message.
 	 * For node updates it contains the node id.
 	 * For array updates it contains "[true].
 	 */
 	@Override
-	public void drupalCreateUpdateComplete(String msg) {
-		Log.e(TAG, "create/update - " + msg);
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+	public void drupalCreateUpdateComplete(String nodeId) {
+		Log.e(TAG, "Packet Created/Updated: " + nodeId);
 		
-//		Log.e(TAG, packetList.toString());
-
+		mPacketTestResultNodeId = nodeId;
+		
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
         
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
@@ -769,20 +783,21 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 mListview.setAdapter(adapter2);                 
             }
         });        
-        
-		
 	}
 	
 	/* (non-Javadoc)
 	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalCreateUpdateComplete(java.lang.String)
 	 * drupal has been successfully updated from this client.
+	 * 
+	 * mRemoteDrupalPacketCache has been updated 
+	 * 
 	 * the parameter msg contains the update message.
 	 * For node updates it contains the node id.
 	 * For array updates it contains "[true].
 	 */
 	@Override
-	public void drupalDeleteComplete(String msg) {
-		Log.e(TAG, "delete - " + msg);
+	public void drupalDeleteComplete(String nodeid) {
+		Log.e(TAG, "Packet deleted: " + nodeid);
 		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
 		
         MainActivity.this.runOnUiThread(new Runnable(){
@@ -791,9 +806,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 mListview.setAdapter(adapter2);                 
             }
         });   
-		
 	}
 
+	/* (non-Javadoc)
+	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalReadComplete()
+	 * 
+	 * Drupal update all has been completed.
+	 * mRemoteDrupalPacketCache has been updated 
+	 *  
+	 */
 	@Override
 	public void drupalReadComplete() {
 		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
@@ -805,7 +826,5 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
             }
         });           
 	}
-	
-	
 	
 }
