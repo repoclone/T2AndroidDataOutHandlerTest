@@ -115,11 +115,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	int mLargePacketLength;
 	int mTooLargePacketLength;
 	
-	
 	private Context mContext;
 	private Activity mActivity;
 	
-	private ListView listview;	
+	private ListView mListview;
+	private DataOutPacketArrayAdapter mPacketDataAdapter;	
 	
 	/**
 	 * Default Server database to sync to
@@ -295,20 +295,20 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         mContext = this;
         mActivity = this;
         
-        listview = (ListView) findViewById(R.id.listView1);
+        mListview = (ListView) findViewById(R.id.listView1);
         
-        listview.setOnItemClickListener(this);        
+        mListview.setOnItemClickListener(this);        
         
         // We don't put anything in the view until we get the callback drupalUpdateComplete()
 
     	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
-        DataOutPacket pkt = new DataOutPacket();
-        fakePacketList.add(pkt);
-        pkt = new DataOutPacket();
-        fakePacketList.add(pkt);
+//        DataOutPacket pkt = new DataOutPacket();
+//        fakePacketList.add(pkt);
+//        pkt = new DataOutPacket();
+//        fakePacketList.add(pkt);
         
         DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, fakePacketList);
-        listview.setAdapter(adapter2);        
+        mListview.setAdapter(adapter2);        
         
         
         Button loginButton = (Button) findViewById(R.id.button_login);
@@ -375,10 +375,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			String applicationVersion = info.versionName;
 			String versionString = APP_ID + " application version: " + applicationVersion;
 
-//			DataOutPacket packet = mDataOutHandler.new DataOutPacket();
-			DataOutPacket packet = new DataOutPacket();
-			packet.add("version", versionString);
-			mDataOutHandler.handleDataOut(packet);				
+//			DataOutPacket packet = new DataOutPacket();
+//			packet.add("version", versionString);
+//			mDataOutHandler.handleDataOut(packet);				
 
 		}
 		catch (Exception e) {
@@ -452,7 +451,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 * 
 	 */
 	void fetchAllData() {
-		mDataOutHandler.getRemoteDrupalNodes(this);
+		mDataOutHandler.getRemoteDrupalNodes();
 	}
 	
 	
@@ -709,20 +708,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 	}
 
-	@Override
-	public void drupalReadComplete() {
-		ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketList.values());
-		
-		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, packetList);
-//		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, mDataOutHandler.mRemoteDrupalPacketList);
-        listview.setAdapter(adapter2);        
-	}
-	
-	void UpdateListView() {
-		
-	}
-	
-	
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -772,7 +757,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void drupalCreateUpdateComplete(String msg) {
-		Log.e(TAG, "got here - create/update");
+		Log.e(TAG, "create/update - " + msg);
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+		
+//		Log.e(TAG, packetList.toString());
+
+        
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                mListview.setAdapter(adapter2);                 
+            }
+        });        
+        
 		
 	}
 	
@@ -785,9 +782,30 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void drupalDeleteComplete(String msg) {
-		Log.e(TAG, "got here - delete");
+		Log.e(TAG, "delete - " + msg);
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+		
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                mListview.setAdapter(adapter2);                 
+            }
+        });   
 		
 	}
-		
+
+	@Override
+	public void drupalReadComplete() {
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+        
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                mListview.setAdapter(adapter2);                 
+            }
+        });           
+	}
+	
+	
 	
 }
