@@ -352,7 +352,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button testDataButton = (Button) findViewById(R.id.button_TestData);
         testDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				unitTest();
+				performUnitTests();
 			}
 		});          
         
@@ -469,7 +469,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	/**
 	 * Performs unit tests on system by sending various forms of data packets to server
 	 */
-	void unitTest() {
+	void performUnitTests() {
 		try {
 			
 			int testCase = 1;
@@ -477,37 +477,37 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			Log.d(TAG, "Test case " + testCase + ": sendFullPayload");
 			packet = generatePacketFullGood();
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 			
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
 			packet = generateTestPacketNumericAsStrings();
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmpty");
 			packet = generateTestPacketEmpty();
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 			
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
 			packet = generateTestPacketMinimalVersionOnly();			
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketLarge");
 			packet = generateTestPacketLarge();			
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNull");
 			packet = generateTestPacketNull();				// Should throw null pointer exception (but not crash)
 			try {
-				TestPacket(packet, String.valueOf(testCase));
+				TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			} catch (Exception e) {
 				
 				if (e.toString().equalsIgnoreCase("java.lang.NullPointerException") ) {
-					Log.d(TAG, "Test Case " + testCase + " PASSED");
+					Log.d(TAG, "Test Case " + testCase + "           PASSED");
 				}
 				Log.d(TAG, e.toString());
 			}			
@@ -516,7 +516,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketRepeatedParameters");
 			packet = generateTestPacketRepeatedParameters();
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 			
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmptyJSONArray");
@@ -524,7 +524,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			packet = generateTestPacketEmptyJSONArray();	
 			List<String> ignoreList = new ArrayList<String>();
 			ignoreList.add(DataOutHandlerTags.TASKS);
-			TestPacketIgnoreTags(packet, String.valueOf(testCase), ignoreList);			
+			TestPacket(packet, String.valueOf(testCase), null, ignoreList, false);			
+			
 			testCase++;
 
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketJSONArrayTooManyLevels");
@@ -536,14 +537,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			ignoreList = new ArrayList<String>();
 			ignoreList.add("time_stamp");
 			ignoreList.add("record_id");
-			TestPacketIgnoreTags(packet, String.valueOf(testCase), expectedpacket, ignoreList);			
+			TestPacket(packet, String.valueOf(testCase), expectedpacket, ignoreList, false);			
 			testCase++;
 
 		
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketTooLarge");
 			packet = generateTestPacketTooLarge();	
 			try {
-				TestPacket(packet, String.valueOf(testCase));
+				TestPacket(packet, String.valueOf(testCase), null, null, true);			
 			} catch (Exception e) {
 				e.printStackTrace();
 			}			
@@ -551,7 +552,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
 			packet = generateTestPacketMinimalVersionOnly();			
-			TestPacket(packet, String.valueOf(testCase));			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;			
 
 			
@@ -560,7 +561,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.e(TAG, e.toString());
 		}			
 	}
-
+	
+	// ------------------------------------------------------------------
+	// Generation of packets for test cases
+	// ------------------------------------------------------------------
 	DataOutPacket generateTestPacketNumericAsStrings() {
 			DataOutPacket packet = new DataOutPacket();
 			packet.add(DataOutHandlerTags.version, "sendTestPacketNumericAsStrings");
@@ -662,165 +666,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		return null;
 	}
 
-	/**
-	 * Sends the requested packet to the DataOutHandler for Create/Update
-	 * @param packet
-	 */
-	void SendPacket(DataOutPacket packet) {
-		mPacketUnderTest = packet;
-		try {
-			mDataOutHandler.handleDataOut(packet);
-		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
-		}		
-	}
-			
-
-	/**
-	 * Sends a packet to the DataOutHandler, waits for it to process it
-	 * then retrieves it and compares it to the original,
-	 * logging the result
-	 * 
-	 * @param packet - Packet to send
-	 * @param testCase - String containing test case number
-	 * @return True if retrieved packet is the same as the send packet
-	 */
-	boolean TestPacket(DataOutPacket packet, String testCase) {
-		mPacketUnderTest = packet;
-		try {
-			mDataOutHandler.handleDataOut(packet);
-		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
-		}
-		
-		while (mPacketTestResultNodeId == null);
-		
-		if (mPacketTestResultNodeId.equalsIgnoreCase("99999")) {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			mPacketTestResultNodeId = null;
-			return false;			
-		}
-		
-		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
-		mPacketTestResultNodeId = null;
-		
-		
-		if (resultPacket.equals(mPacketUnderTest)) {
-			Log.d(TAG, "Test Case " + testCase + " PASSED");
-			return true;
-		}
-		else {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			return false;
-		}
-	}
-	
-	boolean TestPacketIgnoreTags(DataOutPacket packet, String testCase, DataOutPacket alternateResultPacket, List<String> ignoreList) {
-		
-		// All tests in low case
-	    ListIterator<String> iterator = ignoreList.listIterator();
-	    while (iterator.hasNext())
-	    {
-	        iterator.set(iterator.next().toLowerCase());
-	    }		
-
-		
-		mPacketUnderTest = packet;
-		try {
-			mDataOutHandler.handleDataOut(packet);
-		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
-		}
-		
-		while (mPacketTestResultNodeId == null);
-		
-		if (mPacketTestResultNodeId.equalsIgnoreCase("99999")) {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			mPacketTestResultNodeId = null;
-			return false;			
-		}
-		
-		
-		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
-		mPacketTestResultNodeId = null;
-		
-		if (resultPacket.equalsIgnoreTag(alternateResultPacket, ignoreList)) {
-			Log.d(TAG, "Test Case " + testCase + " PASSED");
-			return true;
-		}
-		else {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			return false;
-		}
-	}		
-	
-	
-	boolean TestPacketIgnoreTags(DataOutPacket packet, String testCase, List<String> ignoreList) {
-
-		// All tests in low case
-	    ListIterator<String> iterator = ignoreList.listIterator();
-	    while (iterator.hasNext())
-	    {
-	        iterator.set(iterator.next().toLowerCase());
-	    }		
-		
-		mPacketUnderTest = packet;
-		try {
-			mDataOutHandler.handleDataOut(packet);
-		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
-		}
-		
-		while (mPacketTestResultNodeId == null);
-		
-		if (mPacketTestResultNodeId.equalsIgnoreCase("99999")) {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			mPacketTestResultNodeId = null;
-			return false;			
-		}
-	
-		
-		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
-		mPacketTestResultNodeId = null;
-		
-		
-		if (resultPacket.equalsIgnoreTag(mPacketUnderTest, ignoreList)) {
-			Log.d(TAG, "Test Case " + testCase + " PASSED");
-			return true;
-		}
-		else {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			return false;
-		}
-	}	
-	boolean TestPacket(DataOutPacket packet, String testCase, DataOutPacket alternateResultPacket) {
-		mPacketUnderTest = packet;
-		try {
-			mDataOutHandler.handleDataOut(packet);
-		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
-		}
-		
-		while (mPacketTestResultNodeId == null);
-		
-		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
-		mPacketTestResultNodeId = null;
-		
-		if (mPacketTestResultNodeId.equalsIgnoreCase("99999")) {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			return false;			
-		}		
-		
-		if (resultPacket.equals(alternateResultPacket)) {
-			Log.d(TAG, "Test Case " + testCase + " PASSED");
-			return true;
-		}
-		else {
-			Log.e(TAG, "Test Case " + testCase + " FAILED");
-			return false;
-		}
-	}	
-	
 	DataOutPacket generatePacketFullGood() {
 		DataOutPacket packet = new DataOutPacket();
 
@@ -886,6 +731,104 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		packet.add(DataOutHandlerTags.WIFI_APSCAN, wifiVector);	
 		return packet;
 	}
+	
+	
+	
+	// ------------------------------------------------------------------
+	// Perform one unit test
+	// ------------------------------------------------------------------
+	
+	
+	/**
+	 * Sends a packet to the DataOutHandler, waits for it to process it
+	 * then retrieves it and compares it to the original,
+	 * logging the result	  
+	 * @param packet - Packet to send
+	 * @param testCase testCase - String containing test case number
+	 * @param alternateResultPacket - Alternate packet to test against
+	 * @param ignoreList - List of any parameter tags to ignore
+	 * @param reverseResults - Reverses results (Pass/Fail)
+	 * @return True if PASS, false if FAIL
+	 */
+	boolean TestPacket(DataOutPacket packet, String testCase, DataOutPacket alternateResultPacket, 
+						List<String> ignoreList, Boolean reverseResults) {
+		
+		if (ignoreList != null) {
+			// All tests in low case
+		    ListIterator<String> iterator = ignoreList.listIterator();
+		    while (iterator.hasNext())
+		    {
+		        iterator.set(iterator.next().toLowerCase());
+		    }		
+		}
+		
+		mPacketUnderTest = packet;
+		try {
+			mDataOutHandler.handleDataOut(packet);
+		} catch (DataOutHandlerException e) {
+			e.printStackTrace();
+		}
+		
+		while (mPacketTestResultNodeId == null);
+		
+		
+		Boolean p1 = mPacketTestResultNodeId.equalsIgnoreCase("99999"); 
+		if (p1) {
+			Boolean p2 = reverseResults ? !p1 : p1;
+			if (p2) {
+				Log.e(TAG, "Test Case " + testCase + "           FAILED");
+				mPacketTestResultNodeId = null;
+				return false;			
+			}
+			else {
+				Log.d(TAG, "Test Case " + testCase + "           PASSED");
+				mPacketTestResultNodeId = null;
+				return true;			
+			}
+		}
+		
+		
+		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
+		mPacketTestResultNodeId = null;
+		
+		Boolean packetsAreEqual;
+		if (alternateResultPacket != null) {
+			if (ignoreList != null)
+				packetsAreEqual = resultPacket.equalsIgnoreTag(alternateResultPacket, ignoreList);
+			else
+				packetsAreEqual = resultPacket.equals(alternateResultPacket);
+		}
+		else {
+			if (ignoreList != null)
+				packetsAreEqual = resultPacket.equalsIgnoreTag(mPacketUnderTest, ignoreList);
+			else
+				packetsAreEqual = resultPacket.equals(mPacketUnderTest);
+		}
+		
+		Boolean passed = reverseResults ? !packetsAreEqual : packetsAreEqual;
+		if (packetsAreEqual) {
+			Log.d(TAG, "Test Case " + testCase + "           PASSED");
+			return true;
+		}
+		else {
+			Log.e(TAG, "Test Case " + testCase + "           FAILED");
+			return false;
+		}
+	}		
+	
+	/**
+	 * Sends the requested packet to the DataOutHandler for Create/Update
+	 * @param packet
+	 */
+	void SendPacket(DataOutPacket packet) {
+		mPacketUnderTest = packet;
+		try {
+			mDataOutHandler.handleDataOut(packet);
+		} catch (DataOutHandlerException e) {
+			e.printStackTrace();
+		}		
+	}
+	
 	
 	
 
