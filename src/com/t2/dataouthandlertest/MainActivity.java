@@ -62,10 +62,11 @@ import com.t2.dataouthandler.DataOutHandlerException;
 import com.t2.dataouthandler.DataOutHandlerTags;
 import com.t2.dataouthandler.DataOutPacket;
 import com.t2.dataouthandler.T2AuthDelegate;
+import com.t2.dataouthandler.DatabaseCacheUpdateListener;
 //import com.t2.dataouthandler.DataOutHandler;
 //import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
-import com.t2.drupalsdk.DrupalUpdateListener;
+
 
 
 
@@ -99,7 +100,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.support.v4.app.NavUtils;
 
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
-	DrupalUpdateListener, OnItemClickListener  {
+	DatabaseCacheUpdateListener, OnItemClickListener  {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	private static final String APP_ID = "DataOutHandlerTest";	
@@ -107,6 +108,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	private static final Long NOT_USED_LONG = (long) 0;
 	
 	public static final int ACTIVITY_REFERENCE = 0x302;		
+	
+	public static final int TEST_CASE_TIMEOUT = 30000;
 	
 	
 	private boolean mLoggingEnabled = false;
@@ -166,7 +169,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			mDataOutHandler.enableLogging(this);
 			mDataOutHandler.enableLogCat();
 			
-			mDataOutHandler.setDrupalUpdateListener(this);
+			mDataOutHandler.setDatabaseUpdateListener(this);
 			
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 			mDatabaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
@@ -261,9 +264,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	    deleteButton.setOnClickListener(new View.OnClickListener() {
   	         public void onClick(View v) {
   	        	 Log.e(TAG, "Delete Button " + buttonposition);
- 				// Now save the updated record to Drupal
- 				// Also need to update mDataOutHandler.mRemoteDrupalPacketList
-
  				try {
  					mDataOutHandler.deleteRecord(item);
  				} catch (DataOutHandlerException e) {
@@ -271,7 +271,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
  					e.printStackTrace();
  				}
 
- 				drupalReadComplete(); // TODO - change this to callback
+ 				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
   	        	 
   			  	        	 
   	         }
@@ -306,7 +306,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         
         mListview.setOnItemClickListener(this);        
         
-        // We don't put anything in the view until we get the callback drupalUpdateComplete()
 
     	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
 //        DataOutPacket pkt = new DataOutPacket();
@@ -351,7 +350,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				DataOutPacket packet = generatePacketFullGood();
 				SendPacket(packet);			
 				
- 				drupalReadComplete(); // TODO - change this to callback
+				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
 				
 			}
 		});        
@@ -466,13 +465,13 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	
 	/**
-	 * Cause the DataOutHandler to update arrays from Remote Drupal database
-	 * 	mRemoteDrupalNodeIdList
-	 *  mRemoteDrupalPacketList
+	 * Cause the DataOutHandler to update arrays from Remote database
+	 * (Updates the cache)
+	 * listener.getNodesComplete is called when this is done
 	 * 
 	 */
 	void fetchAllData() {
-		mDataOutHandler.getRemoteDrupalNodes();
+		mDataOutHandler.getRemoteDatabaseNodes();
 	}
 	
 	
@@ -490,94 +489,93 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			DataOutPacket packet;
 			List<String> ignoreList;			
 			
-//			Log.d(TAG, "Test case " + testCase + ": sendFullPayload");
-//			packet = generatePacketFullGood();
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;
-//			
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
-//			packet = generateTestPacketNumericAsStrings();
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;
-//
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmpty");
-//			packet = generateTestPacketEmpty();
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;
-//			
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
-//			packet = generateTestPacketMinimalVersionOnly();			
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;
-//
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketLarge");
-//			packet = generateTestPacketLarge();			
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;
-//
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNull");
-//			packet = generateTestPacketNull();				// Should throw null pointer exception (but not crash)
-//			try {
-//				TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			} catch (Exception e) {
-//				
-//				if (e.toString().equalsIgnoreCase("java.lang.NullPointerException") ) {
-//					Log.d(TAG, "Test Case " + testCase + "           PASSED");
-//				}
-//				Log.d(TAG, e.toString());
-//			}			
-//			testCase++;
-//
-//
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketRepeatedParameters");
-//			packet = generateTestPacketRepeatedParameters();
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;
-//			
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmptyJSONArray");
-//			// We need to ignore the vector field because of the way drupal reports an empty vector arry
-//			packet = generateTestPacketEmptyJSONArray();	
-//			ignoreList = new ArrayList<String>();
-//			ignoreList.add(DataOutHandlerTags.TASKS);
-//			TestPacket(packet, String.valueOf(testCase), null, ignoreList, false);			
-//			
-//			testCase++;
-//
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketJSONArrayTooManyLevels");
-//			// Note that in this case we need to supply an alternative reference packet
-//			// Since Drupal converts the extra levels to one level
-//			// and in doing so we need to ignore time_stamp, and record_id parameters
-//			packet = generateTestPacketJSONArrayTooManyLevels();
-//			DataOutPacket expectedpacket = generateTestPacketJSONArrayTooManyLevelsAlternateResult();			
-//			ignoreList = new ArrayList<String>();
-//			ignoreList.add("time_stamp");
-//			ignoreList.add("record_id");
-//			TestPacket(packet, String.valueOf(testCase), expectedpacket, ignoreList, false);			
-//			testCase++;
-//
-//		
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketTooLarge");
-//			packet = generateTestPacketTooLarge();	
-//			try {
-//				TestPacket(packet, String.valueOf(testCase), null, null, true);			
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}			
-//			testCase++;
-//			
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
-//			packet = generateTestPacketMinimalVersionOnly();			
-//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-//			testCase++;			
-//
-//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketUnknownInconsistentTags");
-//			packet = generateTestPacketUnknownInconsistentTags();			
-//			DataOutPacket packetExpected = generateTestPacketUnknownInconsistentTagsExpected();		
-//			ignoreList = new ArrayList<String>();
-//			ignoreList.add("time_stamp");
-//			ignoreList.add("record_id");			
-//			TestPacket(packet, String.valueOf(testCase), packetExpected, ignoreList, false);			
-//			testCase++;			
+			Log.d(TAG, "Test case " + testCase + ": sendFullPayload");
+			packet = generatePacketFullGood();
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
+			packet = generateTestPacketNumericAsStrings();
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmpty");
+			packet = generateTestPacketEmpty();
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
+			packet = generateTestPacketMinimalVersionOnly();			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketLarge");
+			packet = generateTestPacketLarge();			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNull");
+			packet = generateTestPacketNull();				// Should throw null pointer exception (but not crash)
+			try {
+				TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			} catch (Exception e) {
+				
+				if (e.toString().equalsIgnoreCase("java.lang.NullPointerException") ) {
+					Log.d(TAG, "Test Case " + testCase + "           PASSED");
+				}
+				Log.d(TAG, e.toString());
+			}			
+			testCase++;
+
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketRepeatedParameters");
+			packet = generateTestPacketRepeatedParameters();
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmptyJSONArray");
+			// We need to ignore the vector field because of the way drupal reports an empty vector arry
+			packet = generateTestPacketEmptyJSONArray();	
+			ignoreList = new ArrayList<String>();
+			ignoreList.add(DataOutHandlerTags.TASKS);
+			TestPacket(packet, String.valueOf(testCase), null, ignoreList, false);			
+			testCase++;
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketJSONArrayTooManyLevels");
+			// Note that in this case we need to supply an alternative reference packet
+			// Since the database converts the extra levels to one level
+			// and in doing so we need to ignore time_stamp, and record_id parameters
+			packet = generateTestPacketJSONArrayTooManyLevels();
+			DataOutPacket expectedpacket = generateTestPacketJSONArrayTooManyLevelsAlternateResult();			
+			ignoreList = new ArrayList<String>();
+			ignoreList.add("time_stamp");
+			ignoreList.add("record_id");
+			TestPacket(packet, String.valueOf(testCase), expectedpacket, ignoreList, false);			
+			testCase++;
+
+		
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketTooLarge");
+			packet = generateTestPacketTooLarge();	
+			try {
+				TestPacket(packet, String.valueOf(testCase), null, null, true);			
+			} catch (Exception e) {
+				e.printStackTrace();
+			}			
+			testCase++;
+			
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
+			packet = generateTestPacketMinimalVersionOnly();			
+			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+			testCase++;			
+
+			Log.d(TAG, "Test case " + testCase + ": sendTestPacketUnknownInconsistentTags");
+			packet = generateTestPacketUnknownInconsistentTags();			
+			DataOutPacket packetExpected = generateTestPacketUnknownInconsistentTagsExpected();		
+			ignoreList = new ArrayList<String>();
+			ignoreList.add("time_stamp");
+			ignoreList.add("record_id");			
+			TestPacket(packet, String.valueOf(testCase), packetExpected, ignoreList, false);			
+			testCase++;			
 			
 			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterTypes");
 			packet = generateTestPacketParameterTypes();			
@@ -879,6 +877,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			e.printStackTrace();
 		}
 		
+		// Wait for the test case to complete
+		// or timeout
 		long startTime = System.currentTimeMillis();
 		while (mPacketTestResultNodeId == null) {
 			try {
@@ -888,7 +888,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			}
 			long now = System.currentTimeMillis(); 
 			long span = now - startTime; 
-			if ( now - startTime > 10000) {
+			if ( now - startTime > TEST_CASE_TIMEOUT) {
 				Log.e(TAG, "Test Case " + testCase + "           FAILED - timeout");
 				mPacketTestResultNodeId = null;
 				return false;			
@@ -973,8 +973,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				DataOutPacket updatedPacket = (DataOutPacket) extras.getSerializable("EXISTINGITEM");
 				Log.e(TAG, updatedPacket.toString());			
 				
-				// Now save the updated record to Drupal
-				// Also need to update mDataOutHandler.mRemoteDrupalPacketList
+				// Now save the updated record to database
+				// Also need to update mDataOutHandler.mRemotePacketCache
 
 				try {
 					mDataOutHandler.updateRecord(updatedPacket);
@@ -983,29 +983,29 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					e.printStackTrace();
 				}
 
- 				drupalReadComplete(); // TODO - change this to callback
+				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
 			}
 			break;
 		}
 	}
 
 	/* (non-Javadoc)
-	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalCreateUpdateComplete(java.lang.String)
-	 * drupal has been successfully updated from this client.
+	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabaseCreateUpdateComplete(com.t2.dataouthandler.DataOutPacket)
+	 * database cache has been successfully updated from this client.
 	 * 
-	 *  mRemoteDrupalPacketCache has been updated
+	 *  mRemotePacketCache has been updated
 	 *  
 	 * the parameter msg contains the update message.
 	 * For node updates it contains the node id.
 	 * For array updates it contains "[true].
 	 */
 	@Override
-	public void drupalCreateUpdateComplete(String nodeId) {
-		Log.e(TAG, "Packet Created/Updated: " + nodeId);
+	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
+		Log.e(TAG, "Packet Created/Updated: " + packet.mDrupalNid);
 		
-		mPacketTestResultNodeId = nodeId;
+		mPacketTestResultNodeId = packet.mDrupalNid;
 		
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemotePacketCache.values());
         
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
@@ -1014,24 +1014,24 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
             }
         });        
 	}
-	
+
 	/* (non-Javadoc)
-	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalCreateUpdateComplete(java.lang.String)
-	 * drupal has been successfully updated from this client.
+	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabaseDeleteComplete(com.t2.dataouthandler.DataOutPacket)
+	 * remote database has been successfully updated from this client.
 	 * 
-	 * mRemoteDrupalPacketCache has been updated 
+	 * mRemotePacketCache has been updated 
 	 * 
 	 * the parameter msg contains the update message.
 	 * For node updates it contains the node id.
-	 * For array updates it contains "[true].
+	 * For array updates it contains "[true].	 * 
 	 */
 	@Override
-	public void drupalDeleteComplete(String nodeid) {
-		Log.e(TAG, "Packet deleted: " + nodeid);
+	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
+		Log.e(TAG, "Packet deleted: " + packet.mDrupalNid);
 		
-		mPacketTestResultNodeId = nodeid;
+		mPacketTestResultNodeId = packet.mDrupalNid;
 		
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemotePacketCache.values());
 		
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
@@ -1042,15 +1042,13 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 
 	/* (non-Javadoc)
-	 * @see com.t2.drupalsdk.DrupalUpdateListener#drupalReadComplete()
-	 * 
-	 * Drupal update all has been completed.
-	 * mRemoteDrupalPacketCache has been updated 
-	 *  
+	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabasedeGetNodesComplete()
+	 * database update all has been completed.
+	 * mRemotePacketCache has been updated 	 * 
 	 */
 	@Override
-	public void drupalReadComplete() {
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemoteDrupalPacketCache.values());
+	public void remoteDatabasedeGetNodesComplete() {
+		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemotePacketCache.values());
         
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
@@ -1060,9 +1058,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         });           
 	}
 
+	/* (non-Javadoc)
+	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabaseFailure(java.lang.String)
+	 * 
+	 * There has been a generic error communicating with the remote database
+	 */
 	@Override
-	public void drupalFailure(String msg) {
+	public void remoteDatabaseFailure(String msg) {
 		mPacketTestResultNodeId = "99999";		
 	}
-	
+
+
 }
