@@ -30,6 +30,11 @@
             android:name=".EditRecordActivity"
             android:label="EditRecordActivity" >
         </activity>
+        <activity
+            android:name=".AltEntryActivity"
+            android:label="AltEntryActivity" >
+        </activity>
+        
         
         
         <activity
