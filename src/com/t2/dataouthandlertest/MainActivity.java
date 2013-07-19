@@ -51,6 +51,9 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Vector;
 
+
+import org.t2.dataouthandler.classes.DatabaseHelper;
+import org.t2.dataouthandler.classes.SqlPacket;
 import org.t2health.lib1.SharedPref;
 
 import com.janrain.android.engage.JREngageError;
@@ -101,6 +104,9 @@ import android.support.v4.app.NavUtils;
 
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
 	DatabaseCacheUpdateListener, OnItemClickListener  {
+
+	private DatabaseHelper db;
+	
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	private static final String APP_ID = "DataOutHandlerTest";	
@@ -120,7 +126,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	int mTooLargePacketLength;
 	
 	private Context mContext;
-	private Activity mActivity;
+	private MainActivity mActivity;
 	
 	private ListView mListview;
 	private DataOutPacketArrayAdapter mPacketDataAdapter;	
@@ -142,14 +148,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	private String mPacketTestResultNodeId = null;
 	
-	/**
-	 * Class to help in saving received data to H2
-	 */
-	private DataOutHandler mDataOutHandler;	
 
 	void initDatabase() {
 
-		Log.d(TAG, "Initializing database at " + mRemoteDatabaseUri);
+		Log.d(TAG, "Initializing  database at " + mRemoteDatabaseUri);
 
 		Calendar cal = Calendar.getInstance();						
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
@@ -162,14 +164,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		//	to files and database
 		// ----------------------------------------------------		
 		try {
-			mDataOutHandler = DataOutHandler.getInstance(this, userId,sessionDate, APP_ID,DataOutHandler.DATA_TYPE_INTERNAL_SENSOR, sessionId);
+			Global.sDataOutHandler = DataOutHandler.getInstance(this, userId,sessionDate, APP_ID,DataOutHandler.DATA_TYPE_INTERNAL_SENSOR, sessionId);
 			
-//			mDataOutHandler = new DataOutHandler(this, userId,sessionDate, APP_ID, 
-//					DataOutHandler.DATA_TYPE_INTERNAL_SENSOR, sessionId );
-			mDataOutHandler.enableLogging(this);
-			mDataOutHandler.enableLogCat();
+			Global.sDataOutHandler.enableLogging(this);
+			Global.sDataOutHandler.enableLogCat();
 			
-			mDataOutHandler.setDatabaseUpdateListener(this);
+			Global.sDataOutHandler.setDatabaseUpdateListener(this);
 			
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 			mDatabaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
@@ -190,8 +190,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			
 			
-			mDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
-			mDataOutHandler.setRequiresAuthentication(false);
+			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
+			Global.sDataOutHandler.setRequiresAuthentication(false);
 			
 			
 			
@@ -201,19 +201,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}        
 		
 		if (mLoggingEnabled) {
-			mDataOutHandler.enableLogging(this);
+			Global.sDataOutHandler.enableLogging(this);
 		}   
 		
 		if (mLogCatEnabled) {
-			mDataOutHandler.enableLogCat();
+			Global.sDataOutHandler.enableLogCat();
 		}  	
 		
 	     
 	}
 	
 	void terminateDatabase() {
-    	mDataOutHandler.close();
-    	mDataOutHandler = null;
+    	Global.sDataOutHandler.close();
+    	Global.sDataOutHandler = null;
 	}
 	
 	
@@ -265,7 +265,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	         public void onClick(View v) {
   	        	 Log.e(TAG, "Delete Button " + buttonposition);
  				try {
- 					mDataOutHandler.deleteRecord(item);
+ 					Global.sDataOutHandler.deleteRecord(item);
  				} catch (DataOutHandlerException e) {
  					Log.e(TAG, e.toString());
  					e.printStackTrace();
@@ -306,7 +306,37 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         
         mListview.setOnItemClickListener(this);        
         
+		db = new DatabaseHelper(this);        
+		List<SqlPacket> packetList = db.getPacketList();
+		if (packetList != null) {
+			for (SqlPacket pkt : packetList) {
+				Log.e(TAG, pkt.toString());
+			}
+		}
+        
+        db.createNewSqlPacket("{empty 1}", "1", "");
+		
+		
+		
+		packetList = new ArrayList<SqlPacket>();
+		packetList = db.getPacketList();
+		if (packetList != null) {
+			for (SqlPacket pkt : packetList) {
+				Log.e(TAG, pkt.toString());
+			}
+		}
+		
+        db.createNewSqlPacket("{empty 2}", "1", "");
+		packetList = db.getPacketList();
+		if (packetList != null) {
+			for (SqlPacket pkt : packetList) {
+				Log.e(TAG, pkt.toString());
+			}
+		}
 
+		
+		
+		
     	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
 //        DataOutPacket pkt = new DataOutPacket();
 //        fakePacketList.add(pkt);
@@ -320,15 +350,21 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button loginButton = (Button) findViewById(R.id.button_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				mDataOutHandler.showAuthenticationDialog(mActivity);
+				try {
+					Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, mActivity);
+				} catch (DataOutHandlerException e) {
+					Log.e(TAG, e.toString());
+					e.printStackTrace();
+				}
+				Global.sDataOutHandler.showAuthenticationDialog(mActivity);
 			}
 		});        
         
         Button logoutButton = (Button) findViewById(R.id.button_Logout);
 		logoutButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				mDataOutHandler.close();
-				mDataOutHandler.logOut();
+				Global.sDataOutHandler.close();
+				Global.sDataOutHandler.logOut();
 			}
 		});        
 
@@ -397,7 +433,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 //			DataOutPacket packet = new DataOutPacket();
 //			packet.add("version", versionString);
-//			mDataOutHandler.handleDataOut(packet);				
+//			Global.sDataOutHandler.handleDataOut(packet);				
 
 		}
 		catch (Exception e) {
@@ -471,7 +507,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 * 
 	 */
 	void fetchAllData() {
-		mDataOutHandler.getRemoteDatabaseNodes();
+		Global.sDataOutHandler.getRemoteDatabaseNodes();
 	}
 	
 	
@@ -872,7 +908,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 		mPacketUnderTest = packet;
 		try {
-			mDataOutHandler.handleDataOut(packet);
+			Global.sDataOutHandler.handleDataOut(packet);
 		} catch (DataOutHandlerException e) {
 			e.printStackTrace();
 		}
@@ -912,7 +948,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}
 		
 		
-		DataOutPacket resultPacket = mDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
+		DataOutPacket resultPacket = Global.sDataOutHandler.getPacketByDrupalId(mPacketTestResultNodeId);
 		mPacketTestResultNodeId = null;
 		
 		Boolean packetsAreEqual;
@@ -947,7 +983,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	void SendPacket(DataOutPacket packet) {
 		mPacketUnderTest = packet;
 		try {
-			mDataOutHandler.handleDataOut(packet);
+			Global.sDataOutHandler.handleDataOut(packet);
 		} catch (DataOutHandlerException e) {
 			e.printStackTrace();
 		}		
@@ -974,10 +1010,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				Log.e(TAG, updatedPacket.toString());			
 				
 				// Now save the updated record to database
-				// Also need to update mDataOutHandler.mRemotePacketCache
+				// Also need to update Global.sDataOutHandler.mRemotePacketCache
 
 				try {
-					mDataOutHandler.updateRecord(updatedPacket);
+					Global.sDataOutHandler.updateRecord(updatedPacket);
 				} catch (DataOutHandlerException e) {
 					Log.e(TAG, e.toString());
 					e.printStackTrace();
@@ -1005,7 +1041,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 		mPacketTestResultNodeId = packet.mDrupalNid;
 		
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemotePacketCache.values());
+		final ArrayList packetList = new ArrayList(Global.sDataOutHandler.mRemotePacketCache.values());
         
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
@@ -1031,7 +1067,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 		mPacketTestResultNodeId = packet.mDrupalNid;
 		
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemotePacketCache.values());
+		final ArrayList packetList = new ArrayList(Global.sDataOutHandler.mRemotePacketCache.values());
 		
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
@@ -1048,7 +1084,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabasedeGetNodesComplete() {
-		final ArrayList packetList = new ArrayList(mDataOutHandler.mRemotePacketCache.values());
+		final ArrayList packetList = new ArrayList(Global.sDataOutHandler.mRemotePacketCache.values());
         
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
