@@ -52,8 +52,6 @@ import java.util.Locale;
 import java.util.Vector;
 
 
-import org.t2.dataouthandler.classes.DatabaseHelper;
-import org.t2.dataouthandler.classes.SqlPacket;
 import org.t2health.lib1.SharedPref;
 
 import com.janrain.android.engage.JREngageError;
@@ -66,6 +64,7 @@ import com.t2.dataouthandler.DataOutHandlerTags;
 import com.t2.dataouthandler.DataOutPacket;
 import com.t2.dataouthandler.T2AuthDelegate;
 import com.t2.dataouthandler.DatabaseCacheUpdateListener;
+import com.t2.dataouthandler.dbcache.SqlPacket;
 //import com.t2.dataouthandler.DataOutHandler;
 //import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
@@ -105,7 +104,7 @@ import android.support.v4.app.NavUtils;
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
 	DatabaseCacheUpdateListener, OnItemClickListener  {
 
-	private DatabaseHelper db;
+//	private DatabaseHelper db;
 	
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
@@ -240,9 +239,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	    
   	    View rowView = inflater.inflate(R.layout.manager_item, parent, false);
   	    TextView textView = (TextView) rowView.findViewById(R.id.label);
-  	    
-  	    final DataOutPacket item = this.getItem(position);  	    
-  	    textView.setText(item.mId);
+
+  	    final DataOutPacket item = (DataOutPacket) this.getItem(position);  	    
+  	    textView.setText(item.mRecordId);
 
   	    
   	    Button editButton = (Button) rowView.findViewById(R.id.button_edit);
@@ -265,15 +264,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	         public void onClick(View v) {
   	        	 Log.e(TAG, "Delete Button " + buttonposition);
  				try {
- 					Global.sDataOutHandler.deleteRecord(item);
+ 				Global.sDataOutHandler.deleteRecord(item);
  				} catch (DataOutHandlerException e) {
  					Log.e(TAG, e.toString());
  					e.printStackTrace();
  				}
 
- 				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
-  	        	 
-  			  	        	 
   	         }
   	    });  	    
   	    
@@ -305,57 +301,36 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         mListview = (ListView) findViewById(R.id.listView1);
         
         mListview.setOnItemClickListener(this);        
-        
-		db = new DatabaseHelper(this);        
-		List<SqlPacket> packetList = db.getPacketList();
-		if (packetList != null) {
-			for (SqlPacket pkt : packetList) {
-				Log.e(TAG, pkt.toString());
-			}
-		}
-        
-        db.createNewSqlPacket("{empty 1}", "1", "");
-		
-		
-		
-		packetList = new ArrayList<SqlPacket>();
-		packetList = db.getPacketList();
-		if (packetList != null) {
-			for (SqlPacket pkt : packetList) {
-				Log.e(TAG, pkt.toString());
-			}
-		}
-		
-        db.createNewSqlPacket("{empty 2}", "1", "");
-		packetList = db.getPacketList();
-		if (packetList != null) {
-			for (SqlPacket pkt : packetList) {
-				Log.e(TAG, pkt.toString());
-			}
-		}
 
-		
-		
-		
-    	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
+//        List<SqlPacket> fakePacketListSql = new ArrayList<SqlPacket>();		
+//    	SqlPacket pktSql = new SqlPacket();
+//    	pktSql.setRecordId("123");
+//    	fakePacketListSql.add(pktSql);
+//    	pktSql = new SqlPacket();
+//    	pktSql.setRecordId("456");
+//    	fakePacketListSql.add(pktSql);
+//		
+//    	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
 //        DataOutPacket pkt = new DataOutPacket();
 //        fakePacketList.add(pkt);
 //        pkt = new DataOutPacket();
 //        fakePacketList.add(pkt);
+//        pkt = new DataOutPacket();
+//        fakePacketList.add(pkt);
         
-        DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, fakePacketList);
-        mListview.setAdapter(adapter2);        
-        
+//        DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, fakePacketListSql);
+//        mListview.setAdapter(adapter2);        
+//        
         
         Button loginButton = (Button) findViewById(R.id.button_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				try {
-					Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, mActivity);
-				} catch (DataOutHandlerException e) {
-					Log.e(TAG, e.toString());
-					e.printStackTrace();
-				}
+//				try {
+//					Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, mActivity);
+//				} catch (DataOutHandlerException e) {
+//					Log.e(TAG, e.toString());
+//					e.printStackTrace();
+//				}
 				Global.sDataOutHandler.showAuthenticationDialog(mActivity);
 			}
 		});        
@@ -377,17 +352,13 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			}
 		});        
         
-		
-				
-		
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				DataOutPacket packet = generatePacketFullGood();
 				SendPacket(packet);			
 				
-				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
-				
+//				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
 			}
 		});        
         
@@ -438,10 +409,30 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}
 		catch (Exception e) {
 		   	Log.e(TAG, e.toString());
-		}		
+		}
+		
+		
     }
 
+	
+	
     @Override
+	protected void onResume() {
+		super.onResume();
+		
+		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+        if (packetList != null) {
+            MainActivity.this.runOnUiThread(new Runnable(){
+                public void run(){
+            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                    mListview.setAdapter(adapter2);                 
+                }
+            }); 		
+        }
+		
+	}
+
+	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
@@ -1007,7 +998,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			if (data != null) {
 				Bundle extras = data.getExtras();
 				DataOutPacket updatedPacket = (DataOutPacket) extras.getSerializable("EXISTINGITEM");
-				Log.e(TAG, updatedPacket.toString());			
+				//Log.e(TAG, updatedPacket.toString());			
 				
 				// Now save the updated record to database
 				// Also need to update Global.sDataOutHandler.mRemotePacketCache
@@ -1037,18 +1028,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
-		Log.e(TAG, "Packet Created/Updated: " + packet.mDrupalNid);
+		Log.e(TAG, "Packet Created/Updated: " + packet.mRecordId);
 		
 		mPacketTestResultNodeId = packet.mDrupalNid;
 		
-		final ArrayList packetList = new ArrayList(Global.sDataOutHandler.mRemotePacketCache.values());
-        
-        MainActivity.this.runOnUiThread(new Runnable(){
-            public void run(){
-        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                mListview.setAdapter(adapter2);                 
-            }
-        });        
+		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+        if (packetList != null) {
+            MainActivity.this.runOnUiThread(new Runnable(){
+                public void run(){
+            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                    mListview.setAdapter(adapter2);                 
+                }
+            }); 		
+        }      
 	}
 
 	/* (non-Javadoc)
@@ -1063,18 +1055,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
-		Log.e(TAG, "Packet deleted: " + packet.mDrupalNid);
+		Log.e(TAG, "Packet deleted: " + packet.mRecordId);
 		
-		mPacketTestResultNodeId = packet.mDrupalNid;
+		mPacketTestResultNodeId = packet.mDrupalNid;		// This is for unit tests only
 		
-		final ArrayList packetList = new ArrayList(Global.sDataOutHandler.mRemotePacketCache.values());
-		
-        MainActivity.this.runOnUiThread(new Runnable(){
-            public void run(){
-        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                mListview.setAdapter(adapter2);                 
-            }
-        });   
+		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+        if (packetList != null) {
+            MainActivity.this.runOnUiThread(new Runnable(){
+                public void run(){
+            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                    mListview.setAdapter(adapter2);                 
+                }
+            }); 		
+        }   
 	}
 
 	/* (non-Javadoc)
@@ -1084,14 +1077,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabasedeGetNodesComplete() {
-		final ArrayList packetList = new ArrayList(Global.sDataOutHandler.mRemotePacketCache.values());
-        
-        MainActivity.this.runOnUiThread(new Runnable(){
-            public void run(){
-        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                mListview.setAdapter(adapter2);                 
-            }
-        });           
+		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+        if (packetList != null) {
+            MainActivity.this.runOnUiThread(new Runnable(){
+                public void run(){
+            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+                    mListview.setAdapter(adapter2);                 
+                }
+            }); 		
+        }         
 	}
 
 	/* (non-Javadoc)
