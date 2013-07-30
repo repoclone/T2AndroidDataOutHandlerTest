@@ -365,7 +365,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button updateDataButton = (Button) findViewById(R.id.button_fetch_all);
         updateDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				fetchAllData();
+//				fetchAllData();
 			}
 		});        
         
@@ -489,18 +489,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void T2AuthNotCompleted() {
         new AlertDialog.Builder(mContext).setMessage("Login not completed").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
-	
-	
-	/**
-	 * Cause the DataOutHandler to update arrays from Remote database
-	 * (Updates the cache)
-	 * listener.getNodesComplete is called when this is done
-	 * 
-	 */
-	void fetchAllData() {
-		Global.sDataOutHandler.getRemoteDatabaseNodes();
-	}
-	
 	
 	// ------------------------------------------------------------------
 	// Test Cases
