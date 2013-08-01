@@ -190,7 +190,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			
 			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
-			Global.sDataOutHandler.setRequiresAuthentication(false);
+			Global.sDataOutHandler.setRequiresAuthentication(true);
 			
 			
 			
@@ -267,7 +267,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
  				Global.sDataOutHandler.deleteRecord(item);
  				} catch (DataOutHandlerException e) {
  					Log.e(TAG, e.toString());
- 					e.printStackTrace();
+ 					//e.printStackTrace();
  				}
 
   	         }
@@ -357,15 +357,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			public void onClick(View v) {
 				DataOutPacket packet = generatePacketFullGood();
 				SendPacket(packet);			
-				
-//				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
 			}
 		});        
         
         Button updateDataButton = (Button) findViewById(R.id.button_fetch_all);
         updateDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-//				fetchAllData();
 			}
 		});        
         
@@ -509,111 +506,111 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			TestPacket(packet, String.valueOf(testCase), null, null, false);			
 			testCase++;
 			
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
-			packet = generateTestPacketNumericAsStrings();
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmpty");
-			packet = generateTestPacketEmpty();
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;
-			
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
-			packet = generateTestPacketMinimalVersionOnly();			
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketLarge");
-			packet = generateTestPacketLarge();			
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNull");
-			packet = generateTestPacketNull();				// Should throw null pointer exception (but not crash)
-			try {
-				TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			} catch (Exception e) {
-				
-				if (e.toString().equalsIgnoreCase("java.lang.NullPointerException") ) {
-					Log.d(TAG, "Test Case " + testCase + "           PASSED");
-				}
-				Log.d(TAG, e.toString());
-			}			
-			testCase++;
-
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketRepeatedParameters");
-			packet = generateTestPacketRepeatedParameters();
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;
-			
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmptyJSONArray");
-			// We need to ignore the vector field because of the way drupal reports an empty vector arry
-			packet = generateTestPacketEmptyJSONArray();	
-			ignoreList = new ArrayList<String>();
-			ignoreList.add(DataOutHandlerTags.TASKS);
-			TestPacket(packet, String.valueOf(testCase), null, ignoreList, false);			
-			testCase++;
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketJSONArrayTooManyLevels");
-			// Note that in this case we need to supply an alternative reference packet
-			// Since the database converts the extra levels to one level
-			// and in doing so we need to ignore time_stamp, and record_id parameters
-			packet = generateTestPacketJSONArrayTooManyLevels();
-			DataOutPacket expectedpacket = generateTestPacketJSONArrayTooManyLevelsAlternateResult();			
-			ignoreList = new ArrayList<String>();
-			ignoreList.add("time_stamp");
-			ignoreList.add("record_id");
-			TestPacket(packet, String.valueOf(testCase), expectedpacket, ignoreList, false);			
-			testCase++;
-
-		
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketTooLarge");
-			packet = generateTestPacketTooLarge();	
-			try {
-				TestPacket(packet, String.valueOf(testCase), null, null, true);			
-			} catch (Exception e) {
-				e.printStackTrace();
-			}			
-			testCase++;
-			
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
-			packet = generateTestPacketMinimalVersionOnly();			
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;			
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketUnknownInconsistentTags");
-			packet = generateTestPacketUnknownInconsistentTags();			
-			DataOutPacket packetExpected = generateTestPacketUnknownInconsistentTagsExpected();		
-			ignoreList = new ArrayList<String>();
-			ignoreList.add("time_stamp");
-			ignoreList.add("record_id");			
-			TestPacket(packet, String.valueOf(testCase), packetExpected, ignoreList, false);			
-			testCase++;			
-			
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterTypes");
-			packet = generateTestPacketParameterTypes();			
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;			
-
-			Log.d(TAG, "Test case " + testCase + ": sendgenerateTestPacketInvalidCharacter");
-			packet = generateTestPacketInvalidCharacter();			
-			TestPacket(packet, String.valueOf(testCase), null, null, true);			
-			testCase++;			
-
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterOutOfRange");
-			packet = generateTestPacketParameterOutOfRange();			
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;			
-
-			
-			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterTypes");
-			packet = generateTestPacketParameterTypes();			
-			TestPacket(packet, String.valueOf(testCase), null, null, false);			
-			testCase++;	
-
-			
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNumericAsStrings");
+//			packet = generateTestPacketNumericAsStrings();
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmpty");
+//			packet = generateTestPacketEmpty();
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;
+//			
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
+//			packet = generateTestPacketMinimalVersionOnly();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketLarge");
+//			packet = generateTestPacketLarge();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketNull");
+//			packet = generateTestPacketNull();				// Should throw null pointer exception (but not crash)
+//			try {
+//				TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			} catch (Exception e) {
+//				
+//				if (e.toString().equalsIgnoreCase("java.lang.NullPointerException") ) {
+//					Log.d(TAG, "Test Case " + testCase + "           PASSED");
+//				}
+//				Log.d(TAG, e.toString());
+//			}			
+//			testCase++;
+//
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketRepeatedParameters");
+//			packet = generateTestPacketRepeatedParameters();
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;
+//			
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketEmptyJSONArray");
+//			// We need to ignore the vector field because of the way drupal reports an empty vector arry
+//			packet = generateTestPacketEmptyJSONArray();	
+//			ignoreList = new ArrayList<String>();
+//			ignoreList.add(DataOutHandlerTags.TASKS);
+//			TestPacket(packet, String.valueOf(testCase), null, ignoreList, false);			
+//			testCase++;
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketJSONArrayTooManyLevels");
+//			// Note that in this case we need to supply an alternative reference packet
+//			// Since the database converts the extra levels to one level
+//			// and in doing so we need to ignore time_stamp, and record_id parameters
+//			packet = generateTestPacketJSONArrayTooManyLevels();
+//			DataOutPacket expectedpacket = generateTestPacketJSONArrayTooManyLevelsAlternateResult();			
+//			ignoreList = new ArrayList<String>();
+//			ignoreList.add("time_stamp");
+//			ignoreList.add("record_id");
+//			TestPacket(packet, String.valueOf(testCase), expectedpacket, ignoreList, false);			
+//			testCase++;
+//
+//		
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketTooLarge");
+//			packet = generateTestPacketTooLarge();	
+//			try {
+//				TestPacket(packet, String.valueOf(testCase), null, null, true);			
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}			
+//			testCase++;
+//			
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketMinimalVersionOnly");
+//			packet = generateTestPacketMinimalVersionOnly();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;			
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketUnknownInconsistentTags");
+//			packet = generateTestPacketUnknownInconsistentTags();			
+//			DataOutPacket packetExpected = generateTestPacketUnknownInconsistentTagsExpected();		
+//			ignoreList = new ArrayList<String>();
+//			ignoreList.add("time_stamp");
+//			ignoreList.add("record_id");			
+//			TestPacket(packet, String.valueOf(testCase), packetExpected, ignoreList, false);			
+//			testCase++;			
+//			
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterTypes");
+//			packet = generateTestPacketParameterTypes();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;			
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendgenerateTestPacketInvalidCharacter");
+//			packet = generateTestPacketInvalidCharacter();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, true);			
+//			testCase++;			
+//
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterOutOfRange");
+//			packet = generateTestPacketParameterOutOfRange();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;			
+//
+//			
+//			Log.d(TAG, "Test case " + testCase + ": sendTestPacketParameterTypes");
+//			packet = generateTestPacketParameterTypes();			
+//			TestPacket(packet, String.valueOf(testCase), null, null, false);			
+//			testCase++;	
+//
+//			
 			
 			
 			
@@ -889,7 +886,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		try {
 			Global.sDataOutHandler.handleDataOut(packet);
 		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
+			Log.e(TAG, e.toString());
 		}
 		
 		// Wait for the test case to complete
@@ -899,7 +896,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				Log.e(TAG, e.toString());
 			}
 			long now = System.currentTimeMillis(); 
 			long span = now - startTime; 
@@ -964,7 +961,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		try {
 			Global.sDataOutHandler.handleDataOut(packet);
 		} catch (DataOutHandlerException e) {
-			e.printStackTrace();
+			Log.e(TAG, e.toString());
 		}		
 	}
 	
@@ -995,10 +992,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					Global.sDataOutHandler.updateRecord(updatedPacket);
 				} catch (DataOutHandlerException e) {
 					Log.e(TAG, e.toString());
-					e.printStackTrace();
+					
 				}
 
-				remoteDatabasedeGetNodesComplete(); // TODO - change this to callback
 			}
 			break;
 		}
@@ -1056,24 +1052,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 }
             }); 		
         }   
-	}
-
-	/* (non-Javadoc)
-	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabasedeGetNodesComplete()
-	 * database update all has been completed.
-	 * mRemotePacketCache has been updated 	 * 
-	 */
-	@Override
-	public void remoteDatabasedeGetNodesComplete() {
-		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
-        if (packetList != null) {
-            MainActivity.this.runOnUiThread(new Runnable(){
-                public void run(){
-            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                    mListview.setAdapter(adapter2);                 
-                }
-            }); 		
-        }         
 	}
 
 	/* (non-Javadoc)
