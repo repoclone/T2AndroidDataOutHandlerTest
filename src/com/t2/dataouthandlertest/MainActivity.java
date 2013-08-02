@@ -210,15 +210,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	     
 	}
 	
-	void terminateDatabase() {
-    	Global.sDataOutHandler.close();
-    	Global.sDataOutHandler = null;
-	}
-	
-	
     @Override
 	protected void onDestroy() {
-    	terminateDatabase();
+    	Global.sDataOutHandler.close();
+    	Global.sDataOutHandler = null;
 		super.onDestroy();
 	}
 
@@ -331,14 +326,13 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 //					Log.e(TAG, e.toString());
 //					e.printStackTrace();
 //				}
-				Global.sDataOutHandler.showAuthenticationDialog(mActivity);
+				Global.sDataOutHandler.logIn(mActivity);
 			}
 		});        
         
         Button logoutButton = (Button) findViewById(R.id.button_Logout);
 		logoutButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				Global.sDataOutHandler.close();
 				Global.sDataOutHandler.logOut();
 			}
 		});        
@@ -452,10 +446,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
-	      if (key.endsWith("external_database_type")) {
-	    	  String stringValue = sharedPreferences.getString(key, "-1");
-	    	  terminateDatabase();
-	    	  initDatabase();
+	    if (key.endsWith("external_database_type")) {
+	    	String stringValue = sharedPreferences.getString(key, "-1");
+	      	Global.sDataOutHandler.close();
+	      	Global.sDataOutHandler = null;
+	    	initDatabase();
 	      }	
 	}
 
@@ -1012,7 +1007,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
-		Log.e(TAG, "Packet Created/Updated: " + packet.mRecordId);
+		Log.d(TAG, "Packet Created/Updated: " + packet.mRecordId);
 		
 		mPacketTestResultNodeId = packet.mDrupalNid;
 		
