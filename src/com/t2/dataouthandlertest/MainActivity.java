@@ -334,7 +334,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		logoutButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				Global.sDataOutHandler.logOut();
-			}
+			} 
 		});        
 
         Button altActivityButton = (Button) findViewById(R.id.button_alt_entry_activity);
