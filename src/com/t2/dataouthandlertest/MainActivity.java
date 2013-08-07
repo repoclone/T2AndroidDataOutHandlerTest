@@ -499,21 +499,23 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	void performUnitTests() {
 		try {
 			
-			int testCase = 1;	
-			UnitTestParams params1 = UnitTestParams.generatePacketFullGood(testCase++, "sendFullPayload");
-			UnitTestParams params2 = UnitTestParams.generatePacketFullGood(testCase++, "sendTestPacketNumericAsStrings");
-			UnitTestParams params3 = UnitTestParams.generateTestPacketEmpty(testCase++, "sendTestPacketEmpty");
-			UnitTestParams params4 = UnitTestParams.generatePacketFullGood(testCase++, "sendTestPacketMinimalVersionOnly");
-			UnitTestParams params5 = UnitTestParams.generateTestPacketLarge(testCase++, "sendTestPacketLarge", mLargePacketLength);
+	
+			UnitTestParams params1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
+			UnitTestParams params2 = UnitTestParams.generatePacketFullGood(2, "sendTestPacketNumericAsStrings");
+			UnitTestParams params3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
+			UnitTestParams params4 = UnitTestParams.generatePacketFullGood(4, "sendTestPacketMinimalVersionOnly");
+			UnitTestParams params5 = UnitTestParams.generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
 //			UnitTestParams params6 = UnitTestParams.generateTestPacketNull(testCase++, "sendTestPAcketNull");
-			UnitTestParams params7 = UnitTestParams.generateTestPacketRepeatedParameters(testCase++, "sendTestPacketRepeatedParameters");
-			UnitTestParams params8 = UnitTestParams.generateTestPacketEmptyJSONArray(testCase++, "sendTestPacketEmptyJSONArray");
-			UnitTestParams params9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(testCase++, "sendTestPacketJSONArrayTooManyLevels");
-			UnitTestParams params10 = UnitTestParams.generateTestPacketTooLarge(testCase++, "sendTestPacketTooLarge", mTooLargePacketLength );
-			UnitTestParams params11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(testCase++, "sendTestPacketUnknownInconsistentTags");
-			UnitTestParams params12 = UnitTestParams.generateTestPacketParameterTypes(testCase++, "sendTestPacketParameterTypes");
-			UnitTestParams params13 = UnitTestParams.generateTestPacketInvalidCharacter(testCase++, "sendgenerateTestPacketInvalidCharacter");
-			UnitTestParams params14 = UnitTestParams.generateTestPacketParameterOutOfRange(testCase++, "sendTestPacketParameterOutOfRange");
+			UnitTestParams params7 = UnitTestParams.generateTestPacketRepeatedParameters(6, "sendTestPacketRepeatedParameters");
+			UnitTestParams params8 = UnitTestParams.generateTestPacketEmptyJSONArray(7, "sendTestPacketEmptyJSONArray");
+			// 9 fails
+						UnitTestParams params9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(8, "sendTestPacketJSONArrayTooManyLevels");
+			UnitTestParams params10 = UnitTestParams.generateTestPacketTooLarge(9, "sendTestPacketTooLarge", mTooLargePacketLength );
+			// 10 fails
+				UnitTestParams params11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(10, "sendTestPacketUnknownInconsistentTags");
+			UnitTestParams params12 = UnitTestParams.generateTestPacketParameterTypes(11, "sendTestPacketParameterTypes");
+			UnitTestParams params13 = UnitTestParams.generateTestPacketInvalidCharacter(12, "sendgenerateTestPacketInvalidCharacter");
+			UnitTestParams params14 = UnitTestParams.generateTestPacketParameterOutOfRange(13, "sendTestPacketParameterOutOfRange");
 
 
 			
