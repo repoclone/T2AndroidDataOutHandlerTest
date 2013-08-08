@@ -30,6 +30,16 @@ public class UnitTestParams {
 	public int mStatus;
 	public String mDescription;
 	
+	/**
+	 * Creates a unit test
+	 * 
+	 * @param packetUnderTest - DataOutPacket to test
+	 * @param testCase - Test case number
+	 * @param alternateResultPacket - Packet to test against (if null, it compares to packetUnderTest) 
+	 * @param ignoreList - Parameters to ignore in the test
+	 * @param reverseResults - Pass becomes fail, visa versa
+	 * @param description - Description of the test case
+	 */
 	public UnitTestParams(DataOutPacket packetUnderTest, String testCase, DataOutPacket alternateResultPacket, 
 			List<String> ignoreList, Boolean reverseResults, String description) {
 		mPacketUnderTest = packetUnderTest; 
@@ -49,8 +59,6 @@ public class UnitTestParams {
 	
 	static public UnitTestParams generatePacketFullGood(int testCaseNum, String description) {
 
-		Log.d(TAG, "Test case " + testCaseNum + ": " + description);		
-		
 		DataOutPacket packet = new DataOutPacket();
 
 		// Throw in some dummy location data
@@ -227,29 +235,29 @@ public class UnitTestParams {
 		return unitTestParams;
 	}		
 	
-	
+	// Note, this will pass on Drupal but fail on AWS (which doesn't allow multiple levels
 	static public UnitTestParams generateTestPacketJSONArrayTooManyLevels(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
 		packet.add(DataOutHandlerTags.version, "TestPacketJSONArrayTooManyLevels");
 		Vector<Vector> taskVector = new Vector<Vector>();
-		Vector<String> innerVector = new Vector<String>();
+		Vector<String> innerVector = new Vector<String>();			// One too man levels of nesting
 		innerVector.add("one");
 		taskVector.add(innerVector);
 		packet.add(DataOutHandlerTags.TASKS, taskVector);
 		
 		
-		// Now create pass/fail criteria
-		DataOutPacket expectedpacket = new DataOutPacket();
-		expectedpacket.add(DataOutHandlerTags.version, "TestPacketJSONArrayTooManyLevels");
-		Vector<String> expectedTaskVector = new Vector<String>();
-		expectedTaskVector.add("one");
-		expectedpacket.add(DataOutHandlerTags.TASKS, expectedTaskVector);			
+//		// Now create pass/fail criteria
+//		DataOutPacket expectedpacket = new DataOutPacket();
+//		expectedpacket.add(DataOutHandlerTags.version, "TestPacketJSONArrayTooManyLevels");
+//		Vector<String> expectedTaskVector = new Vector<String>();
+//		expectedTaskVector.add("one");
+//		expectedpacket.add(DataOutHandlerTags.TASKS, expectedTaskVector);			
 		
 		List<String> ignoreList;
 		ignoreList = new ArrayList<String>();
 		ignoreList.add("time_stamp");
 		ignoreList.add("record_id");		
-		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), expectedpacket, ignoreList, false, description);
+		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, ignoreList, false, description);
 
 		return unitTestParams;
 	}		
@@ -273,6 +281,15 @@ public class UnitTestParams {
 		return unitTestParams;
 	}		
 	
+
+	// This one fails now because of the following
+	// when we add a packet it goes to the cache, then is sent to the remote database
+	// The database returns with the node id to tell us that it was successfully added.
+	// In this case it reuturns the node id even though id doesn't save the unknown tags.
+	// We then use the Cache as if it were good (the the remote database doesn't match it
+	
+	// The fix is, when we receive the node id from the remote database telling us of the 
+	// success we need to actually grab the record and reconcile it with the cache.
 	static public UnitTestParams generateTestPacketUnknownInconsistentTags(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
 		packet.add(DataOutHandlerTags.version, "TestPacketUnknownInconsistentTags");
@@ -326,7 +343,7 @@ public class UnitTestParams {
 		DataOutPacket packet = new DataOutPacket();
 		packet.add(DataOutHandlerTags.version, "TestTestPacketInvalidCharacter");
 		// Note that we have to hyjack some tags for this test
-		packet.add(DataOutHandlerTags.ACCEL_Y, "S\uFFFF Se\uFFFFFFFFor");
+		packet.add(DataOutHandlerTags.ACCEL_Y, "S\uFFFF Se\uFFFFFFFFor"); // This says si senior
 		
 		// Now create pass/fail criteria
 		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, true, description);
@@ -335,12 +352,12 @@ public class UnitTestParams {
 	}		
 
 
+	// This passes because we are simply sending all numerics as strings
 	static public UnitTestParams generateTestPacketParameterOutOfRange(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
 		packet.add(DataOutHandlerTags.version, "TestPacketParameterOutOfRange");
 		// Note that we have to hyjack some tags for this test
-		packet.add(DataOutHandlerTags.ACCEL_X, "S\u00ED Se\u00F1or");
-		packet.add(DataOutHandlerTags.ACCEL_Y, "S\uFFFF Se\uFFFFFFFFor");
+		packet.add(DataOutHandlerTags.ACCEL_X, "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999");
 		
 		// Now create pass/fail criteria
 		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);

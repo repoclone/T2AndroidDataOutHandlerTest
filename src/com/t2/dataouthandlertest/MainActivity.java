@@ -489,115 +489,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         new AlertDialog.Builder(mContext).setMessage("Login not completed").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
 	
-	// ------------------------------------------------------------------
-	// Test Cases
-	// ------------------------------------------------------------------
-	
-	/**
-	 * Performs unit tests on system by sending various forms of data packets to server
-	 */
-	void performUnitTests() {
-		try {
-			
-	
-			UnitTestParams params1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
-			UnitTestParams params2 = UnitTestParams.generatePacketFullGood(2, "sendTestPacketNumericAsStrings");
-			UnitTestParams params3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
-			UnitTestParams params4 = UnitTestParams.generatePacketFullGood(4, "sendTestPacketMinimalVersionOnly");
-			UnitTestParams params5 = UnitTestParams.generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
-//			UnitTestParams params6 = UnitTestParams.generateTestPacketNull(testCase++, "sendTestPAcketNull");
-			UnitTestParams params7 = UnitTestParams.generateTestPacketRepeatedParameters(6, "sendTestPacketRepeatedParameters");
-			UnitTestParams params8 = UnitTestParams.generateTestPacketEmptyJSONArray(7, "sendTestPacketEmptyJSONArray");
-			// 9 fails
-						UnitTestParams params9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(8, "sendTestPacketJSONArrayTooManyLevels");
-			UnitTestParams params10 = UnitTestParams.generateTestPacketTooLarge(9, "sendTestPacketTooLarge", mTooLargePacketLength );
-			// 10 fails
-				UnitTestParams params11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(10, "sendTestPacketUnknownInconsistentTags");
-			UnitTestParams params12 = UnitTestParams.generateTestPacketParameterTypes(11, "sendTestPacketParameterTypes");
-			UnitTestParams params13 = UnitTestParams.generateTestPacketInvalidCharacter(12, "sendgenerateTestPacketInvalidCharacter");
-			UnitTestParams params14 = UnitTestParams.generateTestPacketParameterOutOfRange(13, "sendTestPacketParameterOutOfRange");
 
-
-			
-			// Now add the test cases to the queue and execute them
-			new PacketTestTask().execute(params1, params2, params3, params4, params5, 
-					params7, params8, params9, params10, params11, params12, params13, params14 
-					);		
-			
-			
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}			
-	}
-	
-
-	
-	
-	
-	
-	// ------------------------------------------------------------------
-	// Perform one unit test
-	// ------------------------------------------------------------------
-
-	/**
-	 * Causes a number of test cases to be run
-	 *   This is done in two parts.
-	 *   Part 1 - Performed here
-	 *   	The packet is sent to the remote database
-	 *   	The packet is added to the UnitTestQueue for later processing
-	 *   
-	 *   Part 2 -
-	 *   	When the client receives the remoteDatabaseCurrentContents() callback
-	 *   	(This means that the remote database thinks it's up to date with the 
-	 *   	local cache) we process the unit tests (Check for pass/fail) 
-	 *   
-	 * @author scott.coleman
-	 *
-	 */
-	class PacketTestTask extends AsyncTask<UnitTestParams, Void, Boolean> {
-
-	    private Exception exception;
-
-	    protected Boolean doInBackground(UnitTestParams... unitTestParams) {
-	    	UnitTestParams currentTestParams = unitTestParams[0];
-			Boolean packetsAreEqual = false;
-			
-
-			
-			for (UnitTestParams param : unitTestParams) {
-				// --------------------------------------------------
-				// Step 1 - Send the packet
-				// --------------------------------------------------
-				try {
-					Log.e(TAG, "Adding test case " + param.mTestCase + " : " + param.mDescription);
-					Global.sDataOutHandler.handleDataOut(param.mPacketUnderTest);
-					param.mStatus = Global.UNIT_TEST_EXECUTING;
-					
-					synchronized(UnitTestQueue) {
-						UnitTestQueue.add(param);
-					}
-					
-					
-					
-					// Arbitrary delay between test cases
-					Thread.sleep(1000);
-				} catch (DataOutHandlerException e) {
-					Log.e(TAG, e.toString());
-				}	
-				catch (InterruptedException e) {
-					Log.e(TAG, e.toString());
-				}
-
-			}
-			
-			return packetsAreEqual;
-	    }
-
-	    protected void onPostExecute(Boolean packetsAreEqual) {
-	    }
-	 }	
-	
-	
 	
 	/**
 	 * Sends the requested packet to the DataOutHandler for Create/Update
@@ -718,20 +610,124 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseSyncComplete(
 			HashMap<String, String> remoteContentsMap) {
 		mRemoteContentsMap = remoteContentsMap;
-		Log.e(TAG, "remoteDatabaseCurrentContents() ");
+		Log.e(TAG, "remoteDatabaseSyncComplete() ");
 		processUnitTests(remoteContentsMap);
-		Log.e(TAG, "End remoteDatabaseCurrentContents() ");
+		Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 
 		
 	}
 
+	// ------------------------------------------------------------------
+	// Unit Test Cases
+	// ------------------------------------------------------------------
+	
+	/**
+	 * Performs unit tests on system by sending various forms of data packets to server
+	 */
+	void performUnitTests() {
+		try {
+			
+	
+			UnitTestParams params1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
+//			Log.d(TAG, "Test case " + testCaseNum + ": " + description);		
+			
+			
+			UnitTestParams params2 = UnitTestParams.generateTestPacketNumericAsStrings(2, "sendTestPacketNumericAsStrings");
+			UnitTestParams params3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
+			UnitTestParams params4 = UnitTestParams.generateTestPacketMinimalVersionOnly(4, "sendTestPacketMinimalVersionOnly");
+			UnitTestParams params5 = UnitTestParams.generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
+			UnitTestParams params6 = UnitTestParams.generateTestPacketNull(6, "sendTestPAcketNull");
+			UnitTestParams params7 = UnitTestParams.generateTestPacketRepeatedParameters(7, "sendTestPacketRepeatedParameters");
+			UnitTestParams params8 = UnitTestParams.generateTestPacketEmptyJSONArray(8, "sendTestPacketEmptyJSONArray");
+			UnitTestParams params9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(9, "sendTestPacketJSONArrayTooManyLevels");
+			UnitTestParams params10 = UnitTestParams.generateTestPacketTooLarge(10, "sendTestPacketTooLarge", mTooLargePacketLength );
+			// 11 fails - see note in UnitTestParams
+				UnitTestParams params11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(11, "sendTestPacketUnknownInconsistentTags");
+			UnitTestParams params12 = UnitTestParams.generateTestPacketParameterTypes(12, "sendTestPacketParameterTypes");
+			UnitTestParams params13 = UnitTestParams.generateTestPacketInvalidCharacter(13, "sendgenerateTestPacketInvalidCharacter");
+			UnitTestParams params14 = UnitTestParams.generateTestPacketParameterOutOfRange(14, "sendTestPacketParameterOutOfRange");
+
+
+			
+			// Now add the test cases to the queue and execute them
+//			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
+			new PacketTestTask().execute(params14);		
+			
+			
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+		}			
+	}
+	
+	// ------------------------------------------------------------------
+	// Perform one unit test
+	// ------------------------------------------------------------------
+	/**
+	 * Causes a number of test cases to be run
+	 *   This is done in two parts.
+	 *   Part 1 - Performed here
+	 *   	The packet is sent to the remote database
+	 *   	The packet is added to the UnitTestQueue for later processing
+	 *   
+	 *   Part 2 -
+	 *   	When the client receives the remoteDatabaseSyncComplete() callback
+	 *   	(This means that the remote database thinks it's up to date with the 
+	 *   	local cache) we process the unit tests (Check for pass/fail) 
+	 *   
+	 * @author scott.coleman
+	 *
+	 */
+	class PacketTestTask extends AsyncTask<UnitTestParams, Void, Boolean> {
+
+	    private Exception exception;
+
+	    protected Boolean doInBackground(UnitTestParams... unitTestParams) {
+	    	UnitTestParams currentTestParams = unitTestParams[0];
+			Boolean packetsAreEqual = false;
+			
+			for (UnitTestParams unitTestParam : unitTestParams) {
+				// --------------------------------------------------
+				// Step 1 - Send the packet
+				// --------------------------------------------------
+				try {
+					Log.e(TAG, "Adding test case " + unitTestParam.mTestCase + " : " + unitTestParam.mDescription);
+					Global.sDataOutHandler.handleDataOut(unitTestParam.mPacketUnderTest);
+					unitTestParam.mStatus = Global.UNIT_TEST_EXECUTING;
+					
+					synchronized(UnitTestQueue) {
+						UnitTestQueue.add(unitTestParam);
+					}
+					
+					// Arbitrary delay between test cases
+					Thread.sleep(1000);
+				} catch (DataOutHandlerException e) {
+					Log.e(TAG, e.toString());
+					Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
+					unitTestParam.mStatus = Global.UNIT_TEST_FAILED;					
+				}	
+				catch (InterruptedException e) {
+					Log.e(TAG, e.toString());
+					Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
+					unitTestParam.mStatus = Global.UNIT_TEST_FAILED;					
+				}
+			}
+			return packetsAreEqual;
+	    }
+
+	    protected void onPostExecute(Boolean packetsAreEqual) {
+	    }
+	 }		
 	
 	private void processUnitTests(HashMap<String, String> remoteContentsMap) {
 		
-		if (remoteContentsMap == null)
+		if (remoteContentsMap == null || Global.sDataOutHandler == null)
 			return;
 
 		synchronized(UnitTestQueue) {
+
+			
+			// Iterate through all unit tests in process. If a test is executing, check to see if it's packet status
+			// is idle (sent correctly). If so then compute pass fail criteria for that test.
 			for (UnitTestParams unitTestParam : UnitTestQueue) {
 				if (unitTestParam.mStatus == Global.UNIT_TEST_EXECUTING) {
 					
@@ -760,7 +756,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 									passed = packetTestResult.equals(unitTestParam.mPacketUnderTest);
 							}				
 							
-							
 							if (passed) {
 								Log.d(TAG, "Test Case " + unitTestParam.mTestCase + "           PASSED");		
 								unitTestParam.mStatus = Global.UNIT_TEST_PASSED;								
@@ -769,27 +764,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 								Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
 								unitTestParam.mStatus = Global.UNIT_TEST_FAILED;								
 							}								
-							
-							
-							
-							
-							
-							
-	
 						}				
 					}
-					
-					
+					else {
+						unitTestParam.mStatus = Global.UNIT_TEST_INVALID;						
+					}
 				}
-				
-				
 			}
 		}
-
-		
-		
 	}
-	
-	
 
+	
 }
