@@ -53,6 +53,7 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
+
 import com.t2.dataouthandler.GlobalH2;
 
 
@@ -84,6 +85,7 @@ import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -104,6 +106,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
@@ -153,10 +156,25 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	private HashMap<String, String> mRemoteContentsMap = null;
 	
 	
+	
+	private List<String> dataTypesToShow = new ArrayList<String>();
+	
+	private boolean[]  mDataTypesToggleArray;
+	
 	void initDatabase() {
 
 		Log.d(TAG, "Initializing  database at " + mRemoteDatabaseUri);
 
+		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
+		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA);
+		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA);
+		
+		mDataTypesToggleArray = new boolean[GlobalH2.VALID_DATA_TYPES.length];
+		for (int i = 0; i < GlobalH2.VALID_DATA_TYPES.length; i++) {
+			mDataTypesToggleArray[i] = true;
+		}
+		
+		
 		Calendar cal = Calendar.getInstance();						
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
 		String sessionDate = sdf.format(new Date());
@@ -344,15 +362,89 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				
-				UnitTestParams params = UnitTestParams.generatePacketFullGood(12345678, "sendFullPayload");
-				SendPacket(params.mPacketUnderTest);			
+				
+				AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                alert.setTitle("Add data");
+                alert.setItems(GlobalH2.VALID_DATA_TYPES, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                    	switch (which) {
+                    	case 0:
+                    		UnitTestParams params = UnitTestParams.generatePacketFullGood(12345678, "sendFullPayload");
+            				SendPacket(params.mPacketUnderTest);
+                    		break;
+                	
+                    	case 1:
+                    		params = UnitTestParams.generateTestPacketHabit(12345678, "sendFullPayload");
+            				SendPacket(params.mPacketUnderTest);
+                    		break;
+                	
+                    	case 2:
+                    		params = UnitTestParams.generateTestPacketCheckin(12345678, "sendFullPayload");
+            				SendPacket(params.mPacketUnderTest);
+                	
+                    		default:
+                    			break;
+                    			
+                    	}
+                    	
+                    }
+                });
+                alert.show();				
+				
+				
+				
 			}
 		});        
         
-        Button updateDataButton = (Button) findViewById(R.id.button_fetch_all);
-        updateDataButton.setOnClickListener(new View.OnClickListener() {
+        Button chooseDataTypesButton = (Button) findViewById(R.id.button_choose_data_types);
+        chooseDataTypesButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
+
+				
+		    	AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+		    	alert.setTitle("Choose data types to display");
+				    	alert.setMultiChoiceItems(GlobalH2.VALID_DATA_TYPES,
+		    			mDataTypesToggleArray,
+	                    new DialogInterface.OnMultiChoiceClickListener() {
+
+		    			public void onClick(DialogInterface dialog, int whichButton,boolean isChecked) {
+		    			}
+	                    });
+		    	alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                	
+	                	// Set dataTypesToShow based on selections made
+	            		dataTypesToShow.clear();
+	  
+	            		for (int i = 0; i < GlobalH2.VALID_DATA_TYPES.length; i++) {
+	            			if (mDataTypesToggleArray[i] == true) {
+	            				dataTypesToShow.add(GlobalH2.VALID_DATA_TYPES[i]);
+	            			}
+	            		}
+	                	
+	            		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
+	                    if (packetList != null) {
+	                        MainActivity.this.runOnUiThread(new Runnable(){
+	                            public void run(){
+	                        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
+	                                mListview.setAdapter(adapter2);                 
+	                            }
+	                        }); 		
+	                    }      
+	                	
+	            		
+	                }
+	            });
+
+				alert.show();							
+				
+				
+				
 			}
+			
+
+			
+			
 		});        
         
         Button testDataButton = (Button) findViewById(R.id.button_TestData);
@@ -406,7 +498,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	protected void onResume() {
 		super.onResume();
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketList();
+		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
                 public void run(){
@@ -540,7 +632,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
 		Log.d(TAG, "Packet Created/Updated: " + packet.mRecordId);
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketList();
+		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
                 public void run(){
@@ -565,7 +657,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
 		Log.e(TAG, "Packet deleted: " + packet.mRecordId);
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketList();
+		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
                 public void run(){
@@ -616,30 +708,34 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		try {
 			
 	
-			UnitTestParams params1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
+			UnitTestParams p1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
 //			Log.d(TAG, "Test case " + testCaseNum + ": " + description);		
 			
 			
-			UnitTestParams params2 = UnitTestParams.generateTestPacketNumericAsStrings(2, "sendTestPacketNumericAsStrings");
-			UnitTestParams params3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
-			UnitTestParams params4 = UnitTestParams.generateTestPacketMinimalVersionOnly(4, "sendTestPacketMinimalVersionOnly");
-			UnitTestParams params5 = UnitTestParams.generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
-			UnitTestParams params6 = UnitTestParams.generateTestPacketNull(6, "sendTestPAcketNull");
-			UnitTestParams params7 = UnitTestParams.generateTestPacketRepeatedParameters(7, "sendTestPacketRepeatedParameters");
-			UnitTestParams params8 = UnitTestParams.generateTestPacketEmptyJSONArray(8, "sendTestPacketEmptyJSONArray");
-			UnitTestParams params9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(9, "sendTestPacketJSONArrayTooManyLevels");
-			UnitTestParams params10 = UnitTestParams.generateTestPacketTooLarge(10, "sendTestPacketTooLarge", mTooLargePacketLength );
+			UnitTestParams p2 = UnitTestParams.generateTestPacketNumericAsStrings(2, "sendTestPacketNumericAsStrings");
+			UnitTestParams p3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
+			UnitTestParams p4 = UnitTestParams.generateTestPacketMinimalVersionOnly(4, "sendTestPacketMinimalVersionOnly");
+			UnitTestParams p5 = UnitTestParams.generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
+			UnitTestParams p6 = UnitTestParams.generateTestPacketNull(6, "sendTestPAcketNull");
+			UnitTestParams p7 = UnitTestParams.generateTestPacketRepeatedParameters(7, "sendTestPacketRepeatedParameters");
+			UnitTestParams p8 = UnitTestParams.generateTestPacketEmptyJSONArray(8, "sendTestPacketEmptyJSONArray");
+			UnitTestParams p9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(9, "sendTestPacketJSONArrayTooManyLevels");
+			UnitTestParams p10 = UnitTestParams.generateTestPacketTooLarge(10, "sendTestPacketTooLarge", mTooLargePacketLength );
 			// 11 fails - see note in UnitTestParams
-				UnitTestParams params11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(11, "sendTestPacketUnknownInconsistentTags");
-			UnitTestParams params12 = UnitTestParams.generateTestPacketParameterTypes(12, "sendTestPacketParameterTypes");
-			UnitTestParams params13 = UnitTestParams.generateTestPacketInvalidCharacter(13, "sendgenerateTestPacketInvalidCharacter");
-			UnitTestParams params14 = UnitTestParams.generateTestPacketParameterOutOfRange(14, "sendTestPacketParameterOutOfRange");
+				UnitTestParams p11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(11, "sendTestPacketUnknownInconsistentTags");
+			UnitTestParams p12 = UnitTestParams.generateTestPacketParameterTypes(12, "sendTestPacketParameterTypes");
+			UnitTestParams p13 = UnitTestParams.generateTestPacketInvalidCharacter(13, "sendgenerateTestPacketInvalidCharacter");
+			UnitTestParams p14 = UnitTestParams.generateTestPacketParameterOutOfRange(14, "sendTestPacketParameterOutOfRange");
+
+			UnitTestParams p15 = UnitTestParams.generateTestPacketHabit(15, "TestPacketHabit");
+			UnitTestParams p16 = UnitTestParams.generateTestPacketCheckin(16, "TestPacketCheckin");
 
 
 			
 			// Now add the test cases to the queue and execute them
-			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
-//	new PacketTestTask().execute(params14);		
+//			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
+//			new PacketTestTask().execute(params16, params15);		
+			new PacketTestTask().execute(p15, p16);		
 			
 			
 		} catch (Exception e) {

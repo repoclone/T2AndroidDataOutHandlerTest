@@ -1,7 +1,11 @@
 package com.t2.h2test;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.Vector;
 
 import android.util.Log;
@@ -365,5 +369,47 @@ public class UnitTestParams {
 		return unitTestParams;
 	}		
 
+	static public UnitTestParams generateTestPacketHabit(int testCaseNum, String description) {
+		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
+		packet.add(DataOutHandlerTags.version, description);
+		packet.add(DataOutHandlerTags.HABIT_NAME, "Test habit 1 - name");
+		packet.add(DataOutHandlerTags.HABIT_NOTE, "Test habit 1 - note");
+		packet.add(DataOutHandlerTags.HABIT_NAME, "Test habit 1");
+		
+	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    	Calendar calendar = GregorianCalendar.getInstance();
+    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String currentTimeString = dateFormatter.format(calendar.getTime());
+		packet.add(DataOutHandlerTags.HABIT_REMINDER_TIME, currentTimeString);
+		
+		// Now create pass/fail criteria
+		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);
+
+		return unitTestParams;
+	}		
+
+	static public UnitTestParams generateTestPacketCheckin(int testCaseNum, String description) {
+
+	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    	Calendar calendar = GregorianCalendar.getInstance();
+    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String timeString = dateFormatter.format(calendar.getTime());
+		
+		
+		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN);
+		packet.add(DataOutHandlerTags.version, description);
+		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, timeString);
+		packet.add(DataOutHandlerTags.CHECKIN_HABIT_ID, 1);
+		
+		// Now create pass/fail criteria
+		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);
+
+		return unitTestParams;
+	}		
+	
+	
+	
+	
+	
 	
 }

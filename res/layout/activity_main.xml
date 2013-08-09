@@ -3,30 +3,63 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/linearLayout1"
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical" >
+        
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/linearLayout1"
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal" >
+
     <Button
         android:id="@+id/button_login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:text="@string/login" />
 
     <Button
         android:id="@+id/button_Logout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/button_login"
         android:text="Logout" />
 
     <Button
         android:id="@+id/button_alt_entry_activity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/button_Logout"
-        android:text="Alt Activity" />
+        android:text="Alt Activity" />       
+        
+        
+        
+        
+        </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/linearLayout1"
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal" >
+
+    <Button
+        android:id="@+id/button_TestData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Unit Test" />
+
+    <Button
+        android:id="@+id/button_choose_data_types"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Data Types" />            
+              
+    
     <Button
         android:id="@+id/button_AddData"
         android:layout_width="wrap_content"
@@ -34,40 +67,38 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/button_login"
         android:text="Add Data" />
+        
 
-    <Button
-        android:id="@+id/button_TestData"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/button_AddData"
-        android:layout_alignBottom="@+id/button_AddData"
-        android:layout_toRightOf="@+id/button_AddData"
-        android:text="Unit Test" />
+                    
+       </LinearLayout>           
+        
+	    <LinearLayout
+	        android:id="@+id/linearLayout2"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_below="@+id/button_AddData"
+	        android:layout_centerHorizontal="true"
+	        android:layout_marginTop="22dp"
+	        android:orientation="vertical" >
+	
+	        <ListView
+	            android:id="@+id/listView1"
+	            android:layout_width="match_parent"
+	            android:layout_height="wrap_content"
+	            android:layout_centerVertical="true"
+	            android:layout_toRightOf="@+id/button_login" >
+	        </ListView>
+	    </LinearLayout>        
+                
+                
+        
+    </LinearLayout>    
+    
+    
 
-    <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/button_AddData"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="22dp"
-        android:orientation="vertical" >
+    
 
-        <ListView
-            android:id="@+id/listView1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/button_login" >
-        </ListView>
-    </LinearLayout>
 
-    <Button
-        android:id="@+id/button_fetch_all"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/linearLayout1"
-        android:layout_toRightOf="@+id/button_TestData"
-        android:text="Fetch All Records" />
+
 
 </RelativeLayout>

@@ -15,5 +15,11 @@
     <string name="database_type_t2_rest">T2REST</string>    
     <string name="database_type_drupal">T2DRUPAL</string>    
     
+    
+    <string-array name="planets_array">
+        <item>Add sensor_data</item>
+        <item>Add habit</item>
+        <item>Add checkin</item>
+    </string-array>    
 
 </resources>
