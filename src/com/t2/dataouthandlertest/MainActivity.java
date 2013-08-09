@@ -112,21 +112,9 @@ import android.support.v4.app.NavUtils;
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
 	DatabaseCacheUpdateListener, OnItemClickListener  {
 
-//	private DatabaseHelper db;
-	
     private static List<UnitTestParams> UnitTestQueue =
             Collections.synchronizedList(new ArrayList<UnitTestParams>());	
 
-    //It is imperative that the user manually synchronize on the returned list when iterating over it:
-//    List list = Collections.synchronizedList(new ArrayList());
-//    ...
-//synchronized(list) {
-//    Iterator i = list.iterator(); // Must be in synchronized block
-//    while (i.hasNext())
-//        foo(i.next());
-//}    
-    
-	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	private static final String APP_ID = "DataOutHandlerTest";	
 	private static final String NOT_USED_STRING = "";
@@ -418,7 +406,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	protected void onResume() {
 		super.onResume();
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+		final ArrayList packetList = Global.sDataOutHandler.getPacketList();
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
                 public void run(){
@@ -552,7 +540,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
 		Log.d(TAG, "Packet Created/Updated: " + packet.mRecordId);
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+		final ArrayList packetList = Global.sDataOutHandler.getPacketList();
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
                 public void run(){
@@ -577,7 +565,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
 		Log.e(TAG, "Packet deleted: " + packet.mRecordId);
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketListDOP();
+		final ArrayList packetList = Global.sDataOutHandler.getPacketList();
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
                 public void run(){
@@ -650,8 +638,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 			
 			// Now add the test cases to the queue and execute them
-//			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
-			new PacketTestTask().execute(params14);		
+			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
+//	new PacketTestTask().execute(params14);		
 			
 			
 		} catch (Exception e) {
