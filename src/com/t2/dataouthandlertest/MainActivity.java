@@ -166,7 +166,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		Log.d(TAG, "Initializing  database at " + mRemoteDatabaseUri);
 
 		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
-		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA);
+		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN);
 		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA);
 		
 		mDataTypesToggleArray = new boolean[GlobalH2.VALID_DATA_TYPES.length];
@@ -264,6 +264,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				Intent intent = new Intent(mContext, EditRecordActivity.class);
 				// Send the currently selected DataOutPacked for editing
 				Bundle args = new Bundle();
+				
+				
+				Log.e(TAG, "**** " + item.mChangedDate );
 				args.putSerializable("EXISTINGITEM", item);
 				intent.putExtras(args);
 				startActivityForResult(intent, ACTIVITY_REFERENCE);				
@@ -606,6 +609,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				// Now save the updated record to database
 				// Also need to update Global.sDataOutHandler.mRemotePacketCache
 
+				Log.e(TAG, "**** " + updatedPacket.mChangedDate );
+
+				
 				try {
 					Global.sDataOutHandler.updateRecord(updatedPacket);
 				} catch (DataOutHandlerException e) {
@@ -735,7 +741,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			// Now add the test cases to the queue and execute them
 //			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
 //			new PacketTestTask().execute(params16, params15);		
-			new PacketTestTask().execute(p15, p16);		
+//			new PacketTestTask().execute(p15, p16);		
+			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);		
 			
 			
 		} catch (Exception e) {
