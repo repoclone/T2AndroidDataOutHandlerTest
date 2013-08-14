@@ -1,7 +1,7 @@
 /*****************************************************************
-dataouthandlertest
+MainActivity
 
-Copyright (C) 2011 The National Center for Telehealth and 
+Copyright (C) 2011-2013 The National Center for Telehealth and 
 Technology
 
 Eclipse Public License 1.0 (EPL-1.0)
@@ -75,6 +75,7 @@ import com.t2.dataouthandler.dbcache.SqlPacket;
 //import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
 import com.t2.h2test.UnitTestParams;
+import com.t2.h2test.UnitTests;
 
 
 
@@ -117,6 +118,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
     private static List<UnitTestParams> UnitTestQueue =
             Collections.synchronizedList(new ArrayList<UnitTestParams>());	
+    
+    private UnitTests unitTests;
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 	private static final String APP_ID = "DataOutHandlerTest";	
@@ -130,8 +133,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	private boolean mLogCatEnabled = true;
 	
 	private String mDatabaseTypeString = "";
-	int mLargePacketLength;
-	int mTooLargePacketLength;
 	
 	private Context mContext;
 	private MainActivity mActivity;
@@ -157,6 +158,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	void initDatabase() {
 
 		Log.d(TAG, "Initializing  database at " + mRemoteDatabaseUri);
+		
+		
 
 		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
 		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN);
@@ -185,21 +188,16 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			Global.sDataOutHandler.setDatabaseUpdateListener(this);
 			
+			Log.d(TAG, "Using DataOutHandler version " + DataOutHandler.getVersion());
+			
+			
 			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 			mDatabaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
 			
-			if (mDatabaseTypeString.equalsIgnoreCase(getString(R.string.database_type_drupal))) {
-				mLargePacketLength = 20000;
-				mTooLargePacketLength = 24000;
-			}
-			else if (mDatabaseTypeString.equalsIgnoreCase(getString(R.string.database_type_aws))) {
-				mLargePacketLength = 64000;
-				mTooLargePacketLength = 24001;
-			}
-			else {
-				mLargePacketLength = 64000;
-				mTooLargePacketLength = 24001;
-			}
+			
+		    unitTests = new UnitTests(this, mDatabaseTypeString);    
+			
+
 						
 			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
 			Global.sDataOutHandler.setRequiresAuthentication(true);
@@ -320,17 +318,17 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                     public void onClick(DialogInterface dialog, int which) {
                     	switch (which) {
                     	case 0:
-                    		UnitTestParams params = UnitTestParams.generatePacketFullGood(12345678, "sendFullPayload");
+                    		UnitTestParams params = unitTests.generatePacketFullGood(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
                     		break;
                 	
                     	case 1:
-                    		params = UnitTestParams.generateTestPacketHabit(12345678, "sendFullPayload");
+                    		params = unitTests.generateTestPacketHabit(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
                     		break;
                 	
                     	case 2:
-                    		params = UnitTestParams.generateTestPacketCheckin(12345678, "sendFullPayload");
+                    		params = unitTests.generateTestPacketCheckin(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
                 	
                     		default:
@@ -388,7 +386,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button testDataButton = (Button) findViewById(R.id.button_TestData);
         testDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				performUnitTests();
+				unitTests.performUnitTests();
 			}
 		});          
         
@@ -601,7 +599,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseFailure(String msg) {
-//		mPacketTestResultNodeId = "99999";		
 	}
 
 
@@ -616,166 +613,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseSyncComplete(
 			HashMap<String, String> remoteContentsMap) {
 		Log.e(TAG, "remoteDatabaseSyncComplete() ");
-		processUnitTests(remoteContentsMap);
+		unitTests.processUnitTests(remoteContentsMap);
 		Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
 
-	// ------------------------------------------------------------------
-	// Unit Test Cases
-	// ------------------------------------------------------------------
+
 	
-	/**
-	 * Performs unit tests on system by sending various forms of data packets to server
-	 */
-	void performUnitTests() {
-		try {
-			
 	
-			UnitTestParams p1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
-			UnitTestParams p2 = UnitTestParams.generateTestPacketNumericAsStrings(2, "sendTestPacketNumericAsStrings");
-			UnitTestParams p3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
-			UnitTestParams p4 = UnitTestParams.generateTestPacketMinimalVersionOnly(4, "sendTestPacketMinimalVersionOnly");
-			UnitTestParams p5 = UnitTestParams.generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
-			UnitTestParams p6 = UnitTestParams.generateTestPacketNull(6, "sendTestPAcketNull");
-			UnitTestParams p7 = UnitTestParams.generateTestPacketRepeatedParameters(7, "sendTestPacketRepeatedParameters");
-			UnitTestParams p8 = UnitTestParams.generateTestPacketEmptyJSONArray(8, "sendTestPacketEmptyJSONArray");
-			UnitTestParams p9 = UnitTestParams.generateTestPacketJSONArrayTooManyLevels(9, "sendTestPacketJSONArrayTooManyLevels");
-			UnitTestParams p10 = UnitTestParams.generateTestPacketTooLarge(10, "sendTestPacketTooLarge", mTooLargePacketLength );
-			// 11 fails - see note in UnitTestParams
-				UnitTestParams p11 = UnitTestParams.generateTestPacketUnknownInconsistentTags(11, "sendTestPacketUnknownInconsistentTags");
-			UnitTestParams p12 = UnitTestParams.generateTestPacketParameterTypes(12, "sendTestPacketParameterTypes");
-			UnitTestParams p13 = UnitTestParams.generateTestPacketInvalidCharacter(13, "sendgenerateTestPacketInvalidCharacter");
-			UnitTestParams p14 = UnitTestParams.generateTestPacketParameterOutOfRange(14, "sendTestPacketParameterOutOfRange");
-
-			UnitTestParams p15 = UnitTestParams.generateTestPacketHabit(15, "TestPacketHabit");
-			UnitTestParams p16 = UnitTestParams.generateTestPacketCheckin(16, "TestPacketCheckin");
-			
-			// Now add the test cases to the queue and execute them
-			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);		
-			
-			
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-		}			
-	}
-	
-	// ------------------------------------------------------------------
-	// Perform one unit test
-	// ------------------------------------------------------------------
-	/**
-	 * Causes a number of test cases to be run
-	 *   This is done in two parts.
-	 *   Part 1 - Performed here
-	 *   	The packet is sent to the remote database
-	 *   	The packet is added to the UnitTestQueue for later processing
-	 *   
-	 *   Part 2 -
-	 *   	When the client receives the remoteDatabaseSyncComplete() callback
-	 *   	(This means that the remote database thinks it's up to date with the 
-	 *   	local cache) we process the unit tests (Check for pass/fail) 
-	 *   
-	 * @author scott.coleman
-	 *
-	 */
-	class PacketTestTask extends AsyncTask<UnitTestParams, Void, Boolean> {
-
-	    private Exception exception;
-
-	    protected Boolean doInBackground(UnitTestParams... unitTestParams) {
-	    	UnitTestParams currentTestParams = unitTestParams[0];
-			Boolean packetsAreEqual = false;
-			
-			for (UnitTestParams unitTestParam : unitTestParams) {
-				// --------------------------------------------------
-				// Step 1 - Send the packet
-				// --------------------------------------------------
-				try {
-					Log.e(TAG, "Adding test case " + unitTestParam.mTestCase + " : " + unitTestParam.mDescription);
-					Global.sDataOutHandler.handleDataOut(unitTestParam.mPacketUnderTest);
-					unitTestParam.mStatus = Global.UNIT_TEST_EXECUTING;
-					
-					synchronized(UnitTestQueue) {
-						UnitTestQueue.add(unitTestParam);
-					}
-					
-					// Arbitrary delay between test cases
-					Thread.sleep(1000);
-				} catch (DataOutHandlerException e) {
-					Log.e(TAG, e.toString());
-					Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
-					unitTestParam.mStatus = Global.UNIT_TEST_FAILED;					
-				}	
-				catch (InterruptedException e) {
-					Log.e(TAG, e.toString());
-					Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
-					unitTestParam.mStatus = Global.UNIT_TEST_FAILED;					
-				}
-			}
-			return packetsAreEqual;
-	    }
-
-	    protected void onPostExecute(Boolean packetsAreEqual) {
-	    }
-	 }		
-	
-	/**
-	 * Processes unit tests which are in the UNIT_TEST_EXECUTING state of the UnitTestQueue
-	 *   This should be called every time the dataOutHandler has completed synchronization
-	 *   
-	 * @param remoteContentsMap Hash map mapping all current record id's to drupal id's
-	 */
-	private void processUnitTests(HashMap<String, String> remoteContentsMap) {
-		
-		if (remoteContentsMap == null || Global.sDataOutHandler == null)
-			return;
-
-		synchronized(UnitTestQueue) {
-
-			// Iterate through all unit tests in process. If a test is executing, check to see if it's packet status
-			// is idle (sent correctly). If so then compute pass fail criteria for that test.
-			for (UnitTestParams unitTestParam : UnitTestQueue) {
-				if (unitTestParam.mStatus == Global.UNIT_TEST_EXECUTING) {
-					
-					DataOutPacket packetTestResult = Global.sDataOutHandler.getPacketByRecordId(unitTestParam.mPacketUnderTest.mRecordId);
-					if (packetTestResult != null) {
-						if (packetTestResult.mCacheStatus == GlobalH2.CACHE_IDLE) {
-							
-							// --------------------------------------------------
-							// Step 3 - Compare the sent packet with the one from 
-							//          the cache (remote database)
-							// --------------------------------------------------
-							Log.e(TAG, "Computing results for test case " + unitTestParam.mTestCase + " : " + unitTestParam.mDescription);
-							
-							Boolean passed;
-	
-							if (unitTestParam.mAlternateResultPacket != null) {
-								if (unitTestParam.mIgnoreList != null)
-									passed = packetTestResult.equalsIgnoreTag(unitTestParam.mAlternateResultPacket, unitTestParam.mIgnoreList);
-								else
-									passed = packetTestResult.equals(unitTestParam.mAlternateResultPacket);
-							}
-							else {
-								if (unitTestParam.mIgnoreList != null)
-									passed = packetTestResult.equalsIgnoreTag(unitTestParam.mPacketUnderTest, unitTestParam.mIgnoreList);
-								else
-									passed = packetTestResult.equals(unitTestParam.mPacketUnderTest);
-							}				
-							
-							if (passed) {
-								Log.d(TAG, "Test Case " + unitTestParam.mTestCase + "           PASSED");		
-								unitTestParam.mStatus = Global.UNIT_TEST_PASSED;								
-							}
-							else {
-								Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
-								unitTestParam.mStatus = Global.UNIT_TEST_FAILED;								
-							}								
-						}				
-					}
-					else {
-						unitTestParam.mStatus = Global.UNIT_TEST_INVALID;						
-					}
-				}
-			}
-		}
-	}
 }

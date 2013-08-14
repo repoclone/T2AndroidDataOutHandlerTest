@@ -1,7 +1,7 @@
 /*****************************************************************
-dataouthandlertest
+ThreadUtils
 
-Copyright (C) 2011 The National Center for Telehealth and 
+Copyright (C) 2011-2013 The National Center for Telehealth and 
 Technology
 
 Eclipse Public License 1.0 (EPL-1.0)
