@@ -612,9 +612,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void remoteDatabaseSyncComplete(
 			HashMap<String, String> remoteContentsMap) {
-		Log.e(TAG, "remoteDatabaseSyncComplete() ");
+		//Log.e(TAG, "remoteDatabaseSyncComplete() ");
 		unitTests.processUnitTests(remoteContentsMap);
-		Log.e(TAG, "End remoteDatabaseSyncComplete() ");
+		//Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
 
 
