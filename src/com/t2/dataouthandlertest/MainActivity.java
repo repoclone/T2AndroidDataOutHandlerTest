@@ -124,9 +124,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	private static final Long NOT_USED_LONG = (long) 0;
 	
 	public static final int ACTIVITY_REFERENCE = 0x302;		
-	
 	public static final int TEST_CASE_TIMEOUT = 30000;
-	
 	
 	private boolean mLoggingEnabled = false;
 	private boolean mLogCatEnabled = true;
@@ -152,11 +150,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	private String mRemoteDatabaseUri;	
 	
-	
-	private HashMap<String, String> mRemoteContentsMap = null;
-	
-	
-	
 	private List<String> dataTypesToShow = new ArrayList<String>();
 	
 	private boolean[]  mDataTypesToggleArray;
@@ -173,7 +166,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		for (int i = 0; i < GlobalH2.VALID_DATA_TYPES.length; i++) {
 			mDataTypesToggleArray[i] = true;
 		}
-		
 		
 		Calendar cal = Calendar.getInstance();						
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
@@ -224,8 +216,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		if (mLogCatEnabled) {
 			Global.sDataOutHandler.enableLogCat();
 		}  	
-		
-	     
 	}
 	
     @Override
@@ -255,7 +245,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
   	    final DataOutPacket item = (DataOutPacket) this.getItem(position);  	    
   	    textView.setText(item.mRecordId);
-
   	    
   	    Button editButton = (Button) rowView.findViewById(R.id.button_edit);
   	    editButton.setOnClickListener(new View.OnClickListener() {
@@ -265,13 +254,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				// Send the currently selected DataOutPacked for editing
 				Bundle args = new Bundle();
 				
-				
 				Log.e(TAG, "**** " + item.mChangedDate );
 				args.putSerializable("EXISTINGITEM", item);
 				intent.putExtras(args);
 				startActivityForResult(intent, ACTIVITY_REFERENCE);				
-				
-				
   	         }
   	    });
   	    
@@ -283,26 +269,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
  				Global.sDataOutHandler.deleteRecord(item);
  				} catch (DataOutHandlerException e) {
  					Log.e(TAG, e.toString());
- 					//e.printStackTrace();
  				}
-
   	         }
   	    });  	    
-  	    
-//  	    Button deleteButton = (Button) rowView.findViewById(R.id.delete);
-//  	    editButton.setOnClickListener(new View.OnClickListener() {
-//  	         public void onClick(View v) {
-//  	        	 Log.e(TAG, "Button " + buttonposition);
-//  	        	 Log.e(TAG, "2");
-//  				Intent intent = new Intent(mContext, EditRecordActivity.class);
-//  				Bundle bundle = new Bundle();
-//  				// TODO maybe put the entire record in as serializable (see pill planner)
-//  				bundle.putInt("article_id",position);  				
-//  				intent.putExtras(bundle);				
-//  				startActivity(intent);	
-//  	         }
-//  	    });
-  	    
   	    return rowView;
   	  }
   	}       
@@ -318,26 +287,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         
         mListview.setOnItemClickListener(this);        
 
-//        List<SqlPacket> fakePacketListSql = new ArrayList<SqlPacket>();		
-//    	SqlPacket pktSql = new SqlPacket();
-//    	pktSql.setRecordId("123");
-//    	fakePacketListSql.add(pktSql);
-//    	pktSql = new SqlPacket();
-//    	pktSql.setRecordId("456");
-//    	fakePacketListSql.add(pktSql);
-//		
-//    	List<DataOutPacket> fakePacketList = new ArrayList<DataOutPacket>();		
-//        DataOutPacket pkt = new DataOutPacket();
-//        fakePacketList.add(pkt);
-//        pkt = new DataOutPacket();
-//        fakePacketList.add(pkt);
-//        pkt = new DataOutPacket();
-//        fakePacketList.add(pkt);
-        
-//        DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(this, fakePacketListSql);
-//        mListview.setAdapter(adapter2);        
-//        
-        
         Button loginButton = (Button) findViewById(R.id.button_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -365,7 +314,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				
-				
 				AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                 alert.setTitle("Add data");
                 alert.setItems(GlobalH2.VALID_DATA_TYPES, new DialogInterface.OnClickListener() {
@@ -387,14 +335,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 	
                     		default:
                     			break;
-                    			
                     	}
-                    	
                     }
                 });
                 alert.show();				
-				
-				
 				
 			}
 		});        
@@ -402,8 +346,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button chooseDataTypesButton = (Button) findViewById(R.id.button_choose_data_types);
         chooseDataTypesButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-
-				
 		    	AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
 		    	alert.setTitle("Choose data types to display");
 				    	alert.setMultiChoiceItems(GlobalH2.VALID_DATA_TYPES,
@@ -440,14 +382,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	            });
 
 				alert.show();							
-				
-				
-				
 			}
-			
-
-			
-			
 		});        
         
         Button testDataButton = (Button) findViewById(R.id.button_TestData);
@@ -476,26 +411,22 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         
 	    initDatabase();
 
-		// Log the version
 		try {
 			PackageManager packageManager = getPackageManager();
 			PackageInfo info = packageManager.getPackageInfo(getPackageName(), 0);			
 			String applicationVersion = info.versionName;
 			String versionString = APP_ID + " application version: " + applicationVersion;
 
-//			DataOutPacket packet = new DataOutPacket();
-//			packet.add("version", versionString);
-//			Global.sDataOutHandler.handleDataOut(packet);				
+			// Don't do this here, wait until we're authenticated
+			//			DataOutPacket packet = new DataOutPacket();
+			//			packet.add("version", versionString);
+			//			Global.sDataOutHandler.handleDataOut(packet);				
 
 		}
 		catch (Exception e) {
 		   	Log.e(TAG, e.toString());
 		}
-		
-		
     }
-
-	
 	
     @Override
 	protected void onResume() {
@@ -510,7 +441,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 }
             }); 		
         }
-		
 	}
 
 	@Override
@@ -518,7 +448,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
-
     
     public boolean onOptionsItemSelected(MenuItem item) {
         //respond to menu item selection
@@ -547,10 +476,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void T2AuthSuccess(JRDictionary auth_info, String provider,
 			HttpResponseHeaders responseHeaders,String responsePayload) {
-		
-		
-		
-        JRDictionary profile = (auth_info == null) ? null : auth_info.getAsDictionary("profile");
+
+		JRDictionary profile = (auth_info == null) ? null : auth_info.getAsDictionary("profile");
         String identifier = (profile == null) ? "" : profile.getAsString("identifier");
         String displayName = (profile == null) ? "" : profile.getAsString("displayName");
         String verifiedEmail = (profile == null) ? "" : profile.getAsString("verifiedEmail");
@@ -572,8 +499,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         new AlertDialog.Builder(mContext).setMessage("Login not completed").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
 	
-
-	
 	/**
 	 * Sends the requested packet to the DataOutHandler for Create/Update
 	 * @param packet
@@ -585,9 +510,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.e(TAG, e.toString());
 		}		
 	}
-	
-	
-	
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -616,9 +538,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					Global.sDataOutHandler.updateRecord(updatedPacket);
 				} catch (DataOutHandlerException e) {
 					Log.e(TAG, e.toString());
-					
 				}
-
 			}
 			break;
 		}
@@ -695,12 +615,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void remoteDatabaseSyncComplete(
 			HashMap<String, String> remoteContentsMap) {
-		mRemoteContentsMap = remoteContentsMap;
 		Log.e(TAG, "remoteDatabaseSyncComplete() ");
 		processUnitTests(remoteContentsMap);
 		Log.e(TAG, "End remoteDatabaseSyncComplete() ");
-
-		
 	}
 
 	// ------------------------------------------------------------------
@@ -715,9 +632,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 	
 			UnitTestParams p1 = UnitTestParams.generatePacketFullGood(1, "sendFullPayload");
-//			Log.d(TAG, "Test case " + testCaseNum + ": " + description);		
-			
-			
 			UnitTestParams p2 = UnitTestParams.generateTestPacketNumericAsStrings(2, "sendTestPacketNumericAsStrings");
 			UnitTestParams p3 = UnitTestParams.generateTestPacketEmpty(3, "sendTestPacketEmpty");
 			UnitTestParams p4 = UnitTestParams.generateTestPacketMinimalVersionOnly(4, "sendTestPacketMinimalVersionOnly");
@@ -735,13 +649,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 			UnitTestParams p15 = UnitTestParams.generateTestPacketHabit(15, "TestPacketHabit");
 			UnitTestParams p16 = UnitTestParams.generateTestPacketCheckin(16, "TestPacketCheckin");
-
-
 			
 			// Now add the test cases to the queue and execute them
-//			new PacketTestTask().execute(params1, params2, params3, params4, params5, params6, params7, params8, params9, params10, params11, params12, params13, params14);		
-//			new PacketTestTask().execute(params16, params15);		
-//			new PacketTestTask().execute(p15, p16);		
 			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);		
 			
 			
@@ -809,6 +718,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	    }
 	 }		
 	
+	/**
+	 * Processes unit tests which are in the UNIT_TEST_EXECUTING state of the UnitTestQueue
+	 *   This should be called every time the dataOutHandler has completed synchronization
+	 *   
+	 * @param remoteContentsMap Hash map mapping all current record id's to drupal id's
+	 */
 	private void processUnitTests(HashMap<String, String> remoteContentsMap) {
 		
 		if (remoteContentsMap == null || Global.sDataOutHandler == null)
@@ -816,7 +731,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 		synchronized(UnitTestQueue) {
 
-			
 			// Iterate through all unit tests in process. If a test is executing, check to see if it's packet status
 			// is idle (sent correctly). If so then compute pass fail criteria for that test.
 			for (UnitTestParams unitTestParam : UnitTestQueue) {
@@ -864,6 +778,4 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			}
 		}
 	}
-
-	
 }
