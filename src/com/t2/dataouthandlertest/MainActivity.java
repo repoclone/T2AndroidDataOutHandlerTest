@@ -226,7 +226,25 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		super.onDestroy();
 	}
 
-    public class DataOutPacketArrayAdapter extends ArrayAdapter<DataOutPacket> {
+    
+    
+    
+    @Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+	}
+
+
+
+
+	public class DataOutPacketArrayAdapter extends ArrayAdapter<DataOutPacket> {
   	  private final Context context;
 
   	  public DataOutPacketArrayAdapter(Context context, List<DataOutPacket> values) {
@@ -291,6 +309,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button loginButton = (Button) findViewById(R.id.button_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
+				Log.d(TAG, "loggin in");
 				Global.sDataOutHandler.logIn(mActivity);
 			}
 		});        
@@ -484,6 +503,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         String verifiedEmail = (profile == null) ? "" : profile.getAsString("verifiedEmail");
 
         Log.d(TAG, "Login Successful: " + "displayName = " + displayName + ", verifiedEmail = " + verifiedEmail);
+        new AlertDialog.Builder(mContext).setMessage("Login was successful.").setPositiveButton("OK", null).setCancelable(true).create().show();
 
 	}
 
