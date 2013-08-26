@@ -594,4 +594,23 @@ public class UnitTests {
 		return unitTestParams;
 	}		
 
+	public UnitTestParams generateTestPacketCheckinH4H(int testCaseNum, String description) {
+
+	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    	Calendar calendar = GregorianCalendar.getInstance();
+//    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));   // Drupal wants normal format
+        String timeString = dateFormatter.format(calendar.getTime());
+		
+		
+		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN_H4H);
+		packet.add(DataOutHandlerTags.version, description);
+		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, timeString);
+		packet.add(DataOutHandlerTags.CHECKIN_HABIT_ID, 1);
+		
+		// Now create pass/fail criteria
+		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);
+
+		return unitTestParams;
+	}		
+
 }

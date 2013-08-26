@@ -197,9 +197,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 		    unitTests = new UnitTests(this, mDatabaseTypeString);    
 			
-
+		    Global.sDataOutHandler.setRequiresCSRF(true);
 						
-			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
+//			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
+			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, DataOutHandler.DATABASE_TYPE_T2_DRUPAL, this);
+
+			
 			Global.sDataOutHandler.setRequiresAuthentication(true);
 			
 		} catch (Exception e1) {
@@ -480,11 +483,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         String displayName = (profile == null) ? "" : profile.getAsString("displayName");
         String verifiedEmail = (profile == null) ? "" : profile.getAsString("verifiedEmail");
 
-        Log.e(TAG, "Login Successful: " + "displayName = " + displayName + ", verifiedEmail = " + verifiedEmail);
+        Log.d(TAG, "Login Successful: " + "displayName = " + displayName + ", verifiedEmail = " + verifiedEmail);
 
-		
-		
-        new AlertDialog.Builder(mContext).setMessage("Login was successful.").setPositiveButton("OK", null).setCancelable(true).create().show();
 	}
 
 	@Override
