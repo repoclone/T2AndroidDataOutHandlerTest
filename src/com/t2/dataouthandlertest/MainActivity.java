@@ -603,7 +603,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
-		Log.e(TAG, "Packet deleted: " + packet.mTitle + ", " + packet.mRecordId);
+		Log.e(TAG, "Packet deleted: " + packet.mTitle + ", " + packet.mDrupalNid);
 		
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
