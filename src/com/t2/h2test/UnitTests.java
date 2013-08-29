@@ -558,14 +558,12 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketHabit(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
+		packet.mTitle = "Test habit 1 - name";		
 		packet.add(DataOutHandlerTags.version, description);
-		packet.add(DataOutHandlerTags.HABIT_NAME, "Test habit 1 - name");
 		packet.add(DataOutHandlerTags.HABIT_NOTE, "Test habit 1 - note");
-		packet.add(DataOutHandlerTags.HABIT_NAME, "Test habit 1");
 		
 	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     	Calendar calendar = GregorianCalendar.getInstance();
-    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         String currentTimeString = dateFormatter.format(calendar.getTime());
 		packet.add(DataOutHandlerTags.HABIT_REMINDER_TIME, currentTimeString);
 		
@@ -603,7 +601,8 @@ public class UnitTests {
 		
 		
 		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN_H4H);
-		packet.add(DataOutHandlerTags.version, description);
+		packet.mTitle = "Test Checkin";
+//		packet.add(DataOutHandlerTags.version, description);
 		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, timeString);
 		packet.add(DataOutHandlerTags.CHECKIN_HABIT_ID, 1);
 		

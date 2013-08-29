@@ -263,7 +263,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	    TextView textView = (TextView) rowView.findViewById(R.id.label);
 
   	    final DataOutPacket item = (DataOutPacket) this.getItem(position);  	    
-  	    textView.setText(item.mRecordId);
+  	    //textView.setText(item.mRecordId);
+  	    textView.setText(item.mTitle);
   	    
   	    Button editButton = (Button) rowView.findViewById(R.id.button_edit);
   	    editButton.setOnClickListener(new View.OnClickListener() {
@@ -274,6 +275,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				Bundle args = new Bundle();
 				
 				Log.e(TAG, "**** " + item.mChangedDate );
+				Log.e(TAG, "**** " + item.toString() );
 				args.putSerializable("EXISTINGITEM", item);
 				intent.putExtras(args);
 				startActivityForResult(intent, ACTIVITY_REFERENCE);				
@@ -350,7 +352,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                     		break;
                 	
                     	case 2:
-                    		params = unitTests.generateTestPacketCheckin(12345678, "sendFullPayload");
+                    		params = unitTests.generateTestPacketCheckinH4H(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
                 	
                     		default:
@@ -553,7 +555,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 				
 				try {
-					Global.sDataOutHandler.updateRecord(updatedPacket);
+					updatedPacket.updateChangedDate();
+
+					Global.sDataOutHandler.updateRecordInCache(updatedPacket);
 				} catch (DataOutHandlerException e) {
 					Log.e(TAG, e.toString());
 				}
@@ -574,7 +578,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
-		Log.d(TAG, "Packet Created/Updated: " + packet.mRecordId);
+		Log.d(TAG, "Packet Created/Updated: " + packet.mTitle + ", "+ packet.mRecordId);
 		
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
@@ -599,7 +603,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
-		Log.e(TAG, "Packet deleted: " + packet.mRecordId);
+		Log.e(TAG, "Packet deleted: " + packet.mTitle + ", " + packet.mRecordId);
 		
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
