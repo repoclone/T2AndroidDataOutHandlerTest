@@ -557,7 +557,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				try {
 					updatedPacket.updateChangedDate();
 
-					Global.sDataOutHandler.updateRecordInCache(updatedPacket);
+					Global.sDataOutHandler.updateRecord(updatedPacket);
 				} catch (DataOutHandlerException e) {
 					Log.e(TAG, e.toString());
 				}

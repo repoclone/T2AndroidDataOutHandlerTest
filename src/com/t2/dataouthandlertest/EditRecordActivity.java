@@ -64,10 +64,15 @@ public class EditRecordActivity extends Activity  {
 	private static final String TAG = EditRecordActivity.class.getSimpleName();
 	private Context mContext;
 	
+	private static final String MEMBER_TITLE = "title";
 	
 	private ListView listview;	
 	
 	DataOutPacket mCurrentPacket;	
+
+	public EditRecordActivity() {
+	}
+	
 	
 
 	public class KeyValue {
@@ -136,7 +141,14 @@ public class EditRecordActivity extends Activity  {
     						Log.e(TAG, mCurrentPacket.mItemsMap.toString());
     					}
     					else {
-        					mCurrentPacket.mItemsMap.put(item.mKey, newValue);
+    						
+    						if (item.mKey.equalsIgnoreCase(MEMBER_TITLE)) {
+    							mCurrentPacket.mTitle = newValue;
+    						}
+    						else {
+            					mCurrentPacket.mItemsMap.put(item.mKey, newValue);
+    						}
+    						
     					}
     					
     					
@@ -169,8 +181,6 @@ public class EditRecordActivity extends Activity  {
     	  
     	}  	
 	
-	public EditRecordActivity() {
-	}
 
 	private List<KeyValue> PacketToArrayOfValues(DataOutPacket packet) {
 		List<KeyValue> list = new ArrayList<KeyValue>();
@@ -193,6 +203,13 @@ public class EditRecordActivity extends Activity  {
 				
 			}
 		}
+		
+		if (packet.mTitle != null) {
+			KeyValue kv = new KeyValue(MEMBER_TITLE, packet.mTitle);
+			list.add(kv);			
+		}
+		
+		
 //		KeyValue kv = new KeyValue("1", "2");
 //		list.add(kv);
 //		kv = new KeyValue("3", "4");
