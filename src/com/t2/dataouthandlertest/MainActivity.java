@@ -672,13 +672,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 * Getting here means the API just got a fresh update of database contents from the database
 	 * and that the cache is now in sync with the remote database
 	 * 
-	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabaseSyncComplete(java.util.HashMap)
+	 * @see com.t2.dataouthandler.DatabaseCacheUpdateListener#remoteDatabaseSyncComplete()
 	 */
 	@Override
-	public void remoteDatabaseSyncComplete(
-			HashMap<String, String> remoteContentsMap) {
+	public void remoteDatabaseSyncComplete() {
 		//Log.e(TAG, "remoteDatabaseSyncComplete() ");
-		unitTests.processUnitTests(remoteContentsMap);
+		unitTests.processUnitTests();
 		//Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
 

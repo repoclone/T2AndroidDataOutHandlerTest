@@ -186,11 +186,10 @@ public class UnitTests {
 	 * Processes unit tests which are in the UNIT_TEST_EXECUTING state of the UnitTestQueue
 	 *   This should be called every time the dataOutHandler has completed synchronization
 	 *   
-	 * @param remoteContentsMap Hash map mapping all current record id's to drupal id's
 	 */
-	public void processUnitTests(HashMap<String, String> remoteContentsMap) {
+	public void processUnitTests() {
 		
-		if (remoteContentsMap == null || Global.sDataOutHandler == null)
+		if (Global.sDataOutHandler == null)
 			return;
 
 		synchronized(UnitTestQueue) {
