@@ -57,6 +57,9 @@ import java.util.Vector;
 import com.t2.dataouthandler.GlobalH2;
 
 
+
+
+
 import org.t2health.lib1.SharedPref;
 
 import com.janrain.android.engage.JREngageError;
@@ -74,8 +77,13 @@ import com.t2.dataouthandler.dbcache.SqlPacket;
 //import com.t2.dataouthandler.DataOutHandler;
 //import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
+import com.t2.h2h4h.H2H4h;
+import com.t2.h2h4h.Habit;
 import com.t2.h2test.UnitTestParams;
 import com.t2.h2test.UnitTests;
+
+
+
 
 
 
@@ -116,6 +124,8 @@ import android.support.v4.app.NavUtils;
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
 	DatabaseCacheUpdateListener, OnItemClickListener  {
 
+	private H2H4h mH2H4h;
+	
     private static List<UnitTestParams> UnitTestQueue =
             Collections.synchronizedList(new ArrayList<UnitTestParams>());	
     
@@ -204,6 +214,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 			
 			Global.sDataOutHandler.setRequiresAuthentication(true);
+			
+			
+			mH2H4h = new H2H4h();
+			
 			
 		} catch (Exception e1) {
 			Log.e(TAG, e1.toString());
@@ -332,13 +346,20 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			}
 		});        
         
+    	final String[] labels = new String[] {
+    		DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA, 
+    		DataOutHandlerTags.STRUCTURE_TYPE_HABIT, 
+    		DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN,
+    		"Habit Object"
+    		};        
+        
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				
 				AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
                 alert.setTitle("Add data");
-                alert.setItems(GlobalH2.VALID_DATA_TYPES, new DialogInterface.OnClickListener() {
+                alert.setItems(labels, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                     	switch (which) {
                     	case 0:
@@ -354,9 +375,28 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                     	case 2:
                     		params = unitTests.generateTestPacketCheckinH4H(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
+                    		break;
                 	
-                    		default:
-                    			break;
+                    	case 3:
+                    		try {
+								Habit newHabit = new Habit("Title", "Note", new Date());
+								
+								List<Habit> habits = new ArrayList<Habit>();
+								habits = mH2H4h.getHabits();
+								
+								for (Habit habit : habits) {
+									Log.e(TAG, habit.drupalize());
+								}
+								
+								
+							} catch (DataOutHandlerException e) {
+								Log.e(TAG, e.toString());
+								e.printStackTrace();
+							}
+                    		break;
+                	
+                		default:
+                			break;
                     	}
                     }
                 });
@@ -389,7 +429,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	            			}
 	            		}
 	                	
-	            		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
+//	            		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
+	            		final ArrayList packetList = Global.sDataOutHandler.getPacketList("StructureType in ('check_in','sensor_data')");
 	                    if (packetList != null) {
 	                        MainActivity.this.runOnUiThread(new Runnable(){
 	                            public void run(){
