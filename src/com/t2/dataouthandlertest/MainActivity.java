@@ -277,7 +277,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	    TextView textView = (TextView) rowView.findViewById(R.id.label);
 
   	    final DataOutPacket item = (DataOutPacket) this.getItem(position);  	    
-  	    //textView.setText(item.mRecordId);
   	    textView.setText(item.mTitle);
   	    
   	    Button editButton = (Button) rowView.findViewById(R.id.button_edit);
@@ -383,9 +382,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 								
 								List<Habit> habits = new ArrayList<Habit>();
 								habits = mH2H4h.getHabits();
-								
-								for (Habit habit : habits) {
-									Log.e(TAG, habit.drupalize());
+								if (habits != null) {
+									for (Habit habit : habits) {
+										Log.e(TAG, habit.toString());
+									}
+									
 								}
 								
 								
@@ -494,7 +495,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     @Override
 	protected void onResume() {
 		super.onResume();
-		
+		Log.e(TAG,"onResume()");
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
@@ -644,7 +645,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
-		Log.e(TAG, "Packet deleted: " + packet.mTitle + ", " + packet.mDrupalNid);
+		Log.e(TAG, "Packet deleted: " + packet.mTitle + ", " + packet.mRecordId);
 		
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
@@ -677,7 +678,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void remoteDatabaseSyncComplete() {
 		//Log.e(TAG, "remoteDatabaseSyncComplete() ");
-		unitTests.processUnitTests();
+	//	unitTests.processUnitTests();
 		//Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
 
