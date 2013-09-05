@@ -52,9 +52,13 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 
 import com.t2.dataouthandler.GlobalH2;
+
+
+
 
 
 
@@ -77,10 +81,14 @@ import com.t2.dataouthandler.dbcache.SqlPacket;
 //import com.t2.dataouthandler.DataOutHandler;
 //import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
+import com.t2.h2h4h.Checkin;
 import com.t2.h2h4h.H2H4h;
 import com.t2.h2h4h.Habit;
 import com.t2.h2test.UnitTestParams;
 import com.t2.h2test.UnitTests;
+
+
+
 
 
 
@@ -124,6 +132,12 @@ import android.support.v4.app.NavUtils;
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
 	DatabaseCacheUpdateListener, OnItemClickListener  {
 
+	/**
+	 * Current list of habits - updated from DataOutHandler
+	 */
+	List<Habit> mHabits = new ArrayList<Habit>();;
+
+	
 	private H2H4h mH2H4h;
 	
     private static List<UnitTestParams> UnitTestQueue =
@@ -217,6 +231,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			
 			mH2H4h = new H2H4h();
+			
+			try {
+				mHabits = mH2H4h.getHabits();
+				
+			} catch (DataOutHandlerException e) {
+				Log.e(TAG, e.toString());
+				e.printStackTrace();
+			}			
 			
 			
 		} catch (Exception e1) {
@@ -349,7 +371,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     		DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA, 
     		DataOutHandlerTags.STRUCTURE_TYPE_HABIT, 
     		DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN,
-    		"Habit Object"
+    		"Habit Object",
+    		"Checkin Object"
     		};        
         
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
@@ -378,12 +401,17 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 	
                     	case 3:
                     		try {
-								Habit newHabit = new Habit("Title", "Note", new Date());
+                    			
+		                    	Random random = new Random();
+		                    	String title = "Habit " + random.nextInt(100000);
+								Habit newHabit = new Habit(title, "Sample Note", new Date());
 								
-								List<Habit> habits = new ArrayList<Habit>();
-								habits = mH2H4h.getHabits();
-								if (habits != null) {
-									for (Habit habit : habits) {
+								
+								// Just show the list of habits so we know we got this one
+								mHabits = mH2H4h.getHabits();
+								if (mHabits != null) {
+									Log.e(TAG, "----Habits----");
+									for (Habit habit : mHabits) {
 										Log.e(TAG, habit.toString());
 									}
 									
@@ -396,6 +424,40 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 							}
                     		break;
                 	
+                    	case 4:
+                    		
+                    		
+								if (mHabits.size() > 0) {
+									
+		                    		String[] habitTitles = new String[mHabits.size()];                    		
+									int i = 0;
+									for (Habit habit : mHabits) {
+										Log.e(TAG, habit.toString());
+										habitTitles[i++] = habit.mTitle;
+									}
+									
+									AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+					                alert.setTitle("Select Habit for Checkin");	
+					                alert.setItems(habitTitles, new DialogInterface.OnClickListener() {
+					                    public void onClick(DialogInterface dialog, int which) {
+					                    	
+					                    	Log.e(TAG, "Creating a checkin for habit : " + mHabits.get(which).toString());
+					                    	
+					                    	Random random = new Random();
+					                    	String title = "Checkin " + random.nextInt(100000);
+											Checkin newHabit = new Checkin(mHabits.get(which), title, new Date());
+					                    	
+					                    	
+					                    }
+					                });
+					                alert.show();					                
+					                
+									
+								}                    		
+
+
+                    		break;
+                    		
                 		default:
                 			break;
                     	}
@@ -622,6 +684,21 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseCreateUpdateComplete(DataOutPacket packet) {
 		Log.d(TAG, "Packet Created/Updated: " + packet.mTitle + ", "+ packet.mRecordId);
 		
+		try {
+			Log.e(TAG, "----Habits----");
+			mHabits = mH2H4h.getHabits();
+			if (mHabits != null) {
+				for (Habit habit : mHabits) {
+					Log.e(TAG, habit.toString());
+				}
+				
+			}			
+		} catch (DataOutHandlerException e) {
+			Log.e(TAG, e.toString());
+			e.printStackTrace();
+		}
+	
+		
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
@@ -647,6 +724,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	public void remoteDatabaseDeleteComplete(DataOutPacket packet) {
 		Log.e(TAG, "Packet deleted: " + packet.mTitle + ", " + packet.mRecordId);
 		
+		try {
+			Log.e(TAG, "----Habits----");
+			mHabits = mH2H4h.getHabits();
+			if (mHabits != null) {
+				for (Habit habit : mHabits) {
+					Log.e(TAG, habit.toString());
+				}
+				
+			}			
+		} catch (DataOutHandlerException e) {
+			Log.e(TAG, e.toString());
+			e.printStackTrace();
+		}		
 		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
         if (packetList != null) {
             MainActivity.this.runOnUiThread(new Runnable(){
@@ -677,8 +767,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseSyncComplete() {
-		//Log.e(TAG, "remoteDatabaseSyncComplete() ");
-	//	unitTests.processUnitTests();
+		
+		Log.e(TAG, "remoteDatabaseSyncComplete() ");
+		try {
+			mHabits = mH2H4h.getHabits();
+		} catch (DataOutHandlerException e) {
+			Log.e(TAG, e.toString());
+			e.printStackTrace();
+		}		
+		//unitTests.processUnitTests();
 		//Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
 

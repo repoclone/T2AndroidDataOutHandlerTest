@@ -115,7 +115,8 @@ public class UnitTests {
 			UnitTestParams p16 = generateTestPacketCheckin(16, "TestPacketCheckin");
 			
 			// Now add the test cases to the queue and execute them
-			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);		
+//			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);		
+			new PacketTestTask().execute(p15);		
 			
 			
 		} catch (Exception e) {
@@ -182,65 +183,74 @@ public class UnitTests {
 	    }
 	 }		
 	
-//	/**
-//	 * Processes unit tests which are in the UNIT_TEST_EXECUTING state of the UnitTestQueue
-//	 *   This should be called every time the dataOutHandler has completed synchronization
-//	 *   
-//	 */
-//	public void processUnitTests() {
-//		
-//		if (Global.sDataOutHandler == null)
-//			return;
-//
-//		synchronized(UnitTestQueue) {
-//
-//			// Iterate through all unit tests in process. If a test is executing, check to see if it's packet status
-//			// is idle (sent correctly). If so then compute pass fail criteria for that test.
-//			for (UnitTestParams unitTestParam : UnitTestQueue) {
-//				if (unitTestParam.mStatus == Global.UNIT_TEST_EXECUTING) {
-//					
-//					DataOutPacket packetTestResult = Global.sDataOutHandler.getPacketByRecordId(unitTestParam.mPacketUnderTest.mRecordId);
-//					if (packetTestResult != null) {
-//						if (packetTestResult.mCacheStatus == GlobalH2.CACHE_IDLE) {
-//							
-//							// --------------------------------------------------
-//							// Step 3 - Compare the sent packet with the one from 
-//							//          the cache (remote database)
-//							// --------------------------------------------------
-//							Log.e(TAG, "Computing results for test case " + unitTestParam.mTestCase + " : " + unitTestParam.mDescription);
-//							
-//							Boolean passed;
-//	
-//							if (unitTestParam.mAlternateResultPacket != null) {
-//								if (unitTestParam.mIgnoreList != null)
-//									passed = packetTestResult.equalsIgnoreTag(unitTestParam.mAlternateResultPacket, unitTestParam.mIgnoreList);
-//								else
-//									passed = packetTestResult.equals(unitTestParam.mAlternateResultPacket);
-//							}
-//							else {
-//								if (unitTestParam.mIgnoreList != null)
-//									passed = packetTestResult.equalsIgnoreTag(unitTestParam.mPacketUnderTest, unitTestParam.mIgnoreList);
-//								else
-//									passed = packetTestResult.equals(unitTestParam.mPacketUnderTest);
-//							}				
-//							
-//							if (passed) {
-//								Log.d(TAG, "Test Case " + unitTestParam.mTestCase + "           PASSED");		
-//								unitTestParam.mStatus = Global.UNIT_TEST_PASSED;								
-//							}
-//							else {
-//								Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
-//								unitTestParam.mStatus = Global.UNIT_TEST_FAILED;								
-//							}								
-//						}				
-//					}
-//					else {
-//						unitTestParam.mStatus = Global.UNIT_TEST_INVALID;						
-//					}
-//				}
-//			}
-//		}
-//	}
+	/**
+	 * Processes unit tests which are in the UNIT_TEST_EXECUTING state of the UnitTestQueue
+	 *   This should be called every time the dataOutHandler has completed synchronization
+	 *   
+	 */
+	public void processUnitTests() {
+		
+		if (Global.sDataOutHandler == null)
+			return;
+
+		synchronized(UnitTestQueue) {
+
+			// Iterate through all unit tests in process. If a test is executing, check to see if it's packet status
+			// is idle (sent correctly). If so then compute pass fail criteria for that test.
+			for (UnitTestParams unitTestParam : UnitTestQueue) {
+				if (unitTestParam.mStatus == Global.UNIT_TEST_EXECUTING) {
+					
+//					DataOutPacket packetTestResult = Global.sDataOutHandler.mDbCache.g .mDbCache.getPacketByRecordId(unitTestParam.mPacketUnderTest.mRecordId);
+					DataOutPacket packetTestResult;
+					try {
+						packetTestResult = Global.sDataOutHandler.getPacketByRecordId(unitTestParam.mPacketUnderTest.mRecordId);
+						if (packetTestResult != null) {
+							if (packetTestResult.mCacheStatus == GlobalH2.CACHE_IDLE) {
+								
+								// --------------------------------------------------
+								// Step 3 - Compare the sent packet with the one from 
+								//          the cache (remote database)
+								// --------------------------------------------------
+								Log.e(TAG, "Computing results for test case " + unitTestParam.mTestCase + " : " + unitTestParam.mDescription);
+								
+								Boolean passed;
+		
+								if (unitTestParam.mAlternateResultPacket != null) {
+									if (unitTestParam.mIgnoreList != null)
+										passed = packetTestResult.equalsIgnoreTag(unitTestParam.mAlternateResultPacket, unitTestParam.mIgnoreList);
+									else
+										passed = packetTestResult.equals(unitTestParam.mAlternateResultPacket);
+								}
+								else {
+									if (unitTestParam.mIgnoreList != null)
+										passed = packetTestResult.equalsIgnoreTag(unitTestParam.mPacketUnderTest, unitTestParam.mIgnoreList);
+									else
+										passed = packetTestResult.equals(unitTestParam.mPacketUnderTest);
+								}				
+								
+								if (passed) {
+									Log.d(TAG, "Test Case " + unitTestParam.mTestCase + "           PASSED");		
+									unitTestParam.mStatus = Global.UNIT_TEST_PASSED;								
+								}
+								else {
+									Log.e(TAG, "Test Case " + unitTestParam.mTestCase + "           FAILED");
+									unitTestParam.mStatus = Global.UNIT_TEST_FAILED;								
+								}								
+							}				
+						}
+						else {
+							unitTestParam.mStatus = Global.UNIT_TEST_INVALID;						
+						}
+						
+					} catch (DataOutHandlerException e) {
+						Log.e(TAG, e.toString());
+						e.printStackTrace();
+					}
+					
+				}
+			}
+		}
+	}
 	
 	
 	// ------------------------------------------------------------------
@@ -561,10 +571,17 @@ public class UnitTests {
 		packet.add(DataOutHandlerTags.version, description);
 		packet.add(DataOutHandlerTags.HABIT_NOTE, "Test habit 1 - note");
 		
-	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	Calendar calendar = GregorianCalendar.getInstance();
-        String currentTimeString = dateFormatter.format(calendar.getTime());
-		packet.add(DataOutHandlerTags.HABIT_REMINDER_TIME, currentTimeString);
+//    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));   // Drupal wants normal format
+        String timeString = dateFormatter.format(calendar.getTime());		
+		
+//    	long millis = calendar.getTimeInMillis();
+//    	timeString = String.valueOf(millis/1000);
+        
+        
+        
+		packet.add(DataOutHandlerTags.HABIT_REMINDER_TIME, timeString);
 		
 		// Now create pass/fail criteria
 		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);
@@ -593,7 +610,7 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketCheckinH4H(int testCaseNum, String description) {
 
-	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	Calendar calendar = GregorianCalendar.getInstance();
 //    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));   // Drupal wants normal format
         String timeString = dateFormatter.format(calendar.getTime());
