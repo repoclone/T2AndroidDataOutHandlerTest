@@ -46,6 +46,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.t2.dataouthandler.DataOutHandler;
 import com.t2.dataouthandler.DataOutHandlerException;
 import com.t2.dataouthandler.DataOutHandlerTags;
 import com.t2.dataouthandler.DataOutPacket;
@@ -59,27 +60,29 @@ public class UnitTests {
     private List<UnitTestParams> UnitTestQueue =
             Collections.synchronizedList(new ArrayList<UnitTestParams>());	
     
-    String mDatabaseTypeString = "";    
     
 	int mLargePacketLength;
 	int mTooLargePacketLength;
     
 
-	public UnitTests(Context context, String databaseTypeString) {
-		mDatabaseTypeString = databaseTypeString;
+	public UnitTests(Context context, int databaseType) {
 		
-		if (mDatabaseTypeString.equalsIgnoreCase(context.getString(R.string.database_type_drupal))) {
+		switch(databaseType) {
+		case DataOutHandler.DATABASE_TYPE_T2_DRUPAL:
 			mLargePacketLength = 20000;
 			mTooLargePacketLength = 24000;
-		}
-		else if (mDatabaseTypeString.equalsIgnoreCase(context.getString(R.string.database_type_aws))) {
+			break;
+			
+		case DataOutHandler.DATABASE_TYPE_AWS:
+			mLargePacketLength = 64000;
+			mTooLargePacketLength = 24001;
+			break;
+			
+		default:
 			mLargePacketLength = 64000;
 			mTooLargePacketLength = 24001;
 		}
-		else {
-			mLargePacketLength = 64000;
-			mTooLargePacketLength = 24001;
-		}		
+		
 	}
 	
 	
@@ -100,23 +103,26 @@ public class UnitTests {
 			UnitTestParams p3 = generateTestPacketEmpty(3, "sendTestPacketEmpty");
 			UnitTestParams p4 = generateTestPacketMinimalVersionOnly(4, "sendTestPacketMinimalVersionOnly");
 			UnitTestParams p5 = generateTestPacketLarge(5, "sendTestPacketLarge", mLargePacketLength);
-			UnitTestParams p6 = generateTestPacketNull(6, "sendTestPAcketNull");
+			UnitTestParams p6 = generateTestPacketNull(6, "sendTestPAcketNull");                                      // Fails ok
 			UnitTestParams p7 = generateTestPacketRepeatedParameters(7, "sendTestPacketRepeatedParameters");
 			UnitTestParams p8 = generateTestPacketEmptyJSONArray(8, "sendTestPacketEmptyJSONArray");
 			UnitTestParams p9 = generateTestPacketJSONArrayTooManyLevels(9, "sendTestPacketJSONArrayTooManyLevels");
-			UnitTestParams p10 = generateTestPacketTooLarge(10, "sendTestPacketTooLarge", mTooLargePacketLength );
+			UnitTestParams p10 = generateTestPacketTooLarge(10, "sendTestPacketTooLarge", mTooLargePacketLength );      // Fails ok
 			// 11 fails - see note in UnitTestParams
 				UnitTestParams p11 = generateTestPacketUnknownInconsistentTags(11, "sendTestPacketUnknownInconsistentTags");
 			UnitTestParams p12 = generateTestPacketParameterTypes(12, "sendTestPacketParameterTypes");
 			UnitTestParams p13 = generateTestPacketInvalidCharacter(13, "sendgenerateTestPacketInvalidCharacter");
 			UnitTestParams p14 = generateTestPacketParameterOutOfRange(14, "sendTestPacketParameterOutOfRange");
 
-			UnitTestParams p15 = generateTestPacketHabit(15, "TestPacketHabit");
-			UnitTestParams p16 = generateTestPacketCheckin(16, "TestPacketCheckin");
+//			UnitTestParams p15 = generateTestPacketHabit(15, "TestPacketHabit");
+//			UnitTestParams p16 = generateTestPacketCheckin(16, "TestPacketCheckin");
 			
 			// Now add the test cases to the queue and execute them
-//			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);		
-			new PacketTestTask().execute(p15);		
+			new PacketTestTask().execute(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14);		
+//			new PacketTestTask().execute(p1, p2, p3, p4);		
+//			new PacketTestTask().execute(p5, p6, p7, p8);		
+//			new PacketTestTask().execute(p9, p10, p11, p12, p13, p14);		
+//			new PacketTestTask().execute(p10);		
 			
 			
 		} catch (Exception e) {
@@ -262,6 +268,9 @@ public class UnitTests {
 		DataOutPacket packet = new DataOutPacket();
 
 		// Throw in some dummy location data
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+		packet.add(DataOutHandlerTags.version, "Test Version");
 		packet.add(DataOutHandlerTags.version, "Test Version");
 		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 34.5678);
 		packet.add(DataOutHandlerTags.ACCEL_Y, (double) 34.5678);
@@ -334,6 +343,10 @@ public class UnitTests {
 	
 	public UnitTestParams generateTestPacketNumericAsStrings(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+		
 		packet.add(DataOutHandlerTags.version, "TestPacketNumericAsStrings");
 		packet.add(DataOutHandlerTags.ACCEL_X, String.valueOf((double) 11.11111));
 		packet.add(DataOutHandlerTags.ACCEL_Y, String.valueOf((double) 22.22222));
@@ -348,6 +361,10 @@ public class UnitTests {
 	// Check that record is saved (only header data in record)
 	public UnitTestParams generateTestPacketEmpty(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+		
 		packet.add(DataOutHandlerTags.version, "TestPacketEmpty");
 
 		// Now create pass/fail criteria
@@ -358,6 +375,10 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketMinimalVersionOnly(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacket1");
 
 		// Now create pass/fail criteria
@@ -368,6 +389,10 @@ public class UnitTests {
 	
 	public UnitTestParams generateTestPacketLarge(int testCaseNum, String description, int largePacketLength) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+		
 		packet.add(DataOutHandlerTags.version, "TestPacketLarge");
 		
 		char[] array = new char[largePacketLength];
@@ -410,6 +435,10 @@ public class UnitTests {
 	
 	public UnitTestParams generateTestPacketRepeatedParameters(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketRepeatedParameters");
 		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 11.11111);
 		packet.add(DataOutHandlerTags.ACCEL_Z, (double) 22.22222);
@@ -422,6 +451,10 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketEmptyJSONArray(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketEmptyJSONArray");
 		Vector<String> taskVector = new Vector<String>();
 		packet.add(DataOutHandlerTags.TASKS, taskVector);
@@ -438,6 +471,10 @@ public class UnitTests {
 	// Note, this will pass on Drupal but fail on AWS (which doesn't allow multiple levels
 	public UnitTestParams generateTestPacketJSONArrayTooManyLevels(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketJSONArrayTooManyLevels");
 		Vector<Vector> taskVector = new Vector<Vector>();
 		Vector<String> innerVector = new Vector<String>();			// One too man levels of nesting
@@ -464,6 +501,10 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketTooLarge(int testCaseNum, String description, int tooLargePacketLength) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketTooLarge");
 		
 		char[] array = new char[tooLargePacketLength];
@@ -492,6 +533,10 @@ public class UnitTests {
 	// success we need to actually grab the record and reconcile it with the cache.
 	public UnitTestParams generateTestPacketUnknownInconsistentTags(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketUnknownInconsistentTags");
 		packet.add("UnknownTag1", "Unknown1");
 		packet.add("AIRFLOW", "test@gmail.com");
@@ -514,6 +559,10 @@ public class UnitTests {
 	
 	public UnitTestParams generateTestPacketParameterTypes(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketParameterTypes");
 		// Note that we have to hyjack some tags for this test
 		packet.add(DataOutHandlerTags.ACCEL_X, (char) 'a');
@@ -541,6 +590,10 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketInvalidCharacter(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestTestPacketInvalidCharacter");
 		// Note that we have to hyjack some tags for this test
 		packet.add(DataOutHandlerTags.ACCEL_Y, "S\uFFFF Se\uFFFFFFFFor"); // This says si senior
@@ -555,6 +608,10 @@ public class UnitTests {
 	// This passes because we are simply sending all numerics as strings
 	public UnitTestParams generateTestPacketParameterOutOfRange(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket();
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, "TestPacketParameterOutOfRange");
 		// Note that we have to hyjack some tags for this test
 		packet.add(DataOutHandlerTags.ACCEL_X, "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999");
@@ -567,7 +624,10 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketHabit(int testCaseNum, String description) {
 		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
-		packet.mTitle = "Test habit 1 - name";		
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+
 		packet.add(DataOutHandlerTags.version, description);
 		packet.add(DataOutHandlerTags.HABIT_NOTE, "Test habit 1 - note");
 		
@@ -598,6 +658,10 @@ public class UnitTests {
 		
 		
 		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN);
+		
+		packet.mTitle = description;		
+		packet.add(DataOutHandlerTags.TITLE, description);
+		
 		packet.add(DataOutHandlerTags.version, description);
 		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, timeString);
 		packet.add(DataOutHandlerTags.CHECKIN_HABIT_ID, 1);

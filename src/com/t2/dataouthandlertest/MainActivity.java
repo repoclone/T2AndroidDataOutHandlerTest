@@ -57,13 +57,6 @@ import java.util.Vector;
 
 import com.t2.dataouthandler.GlobalH2;
 
-
-
-
-
-
-
-
 import org.t2health.lib1.SharedPref;
 
 import com.janrain.android.engage.JREngageError;
@@ -78,23 +71,12 @@ import com.t2.dataouthandler.DataOutPacket;
 import com.t2.dataouthandler.T2AuthDelegate;
 import com.t2.dataouthandler.DatabaseCacheUpdateListener;
 import com.t2.dataouthandler.dbcache.SqlPacket;
-//import com.t2.dataouthandler.DataOutHandler;
-//import com.t2.dataouthandler.DataOutHandler.DataOutPacket;
 import com.t2.dataouthandlertest.Archiver.LoadException;
 import com.t2.h2h4h.Checkin;
 import com.t2.h2h4h.H2H4h;
 import com.t2.h2h4h.Habit;
 import com.t2.h2test.UnitTestParams;
 import com.t2.h2test.UnitTests;
-
-
-
-
-
-
-
-
-
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -143,7 +125,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     private static List<UnitTestParams> UnitTestQueue =
             Collections.synchronizedList(new ArrayList<UnitTestParams>());	
     
-    private UnitTests unitTests;
+    private UnitTests mUnitTests;
 
 	private static final String TAG = MainActivity.class.getSimpleName();
 	private static final String APP_ID = "DataOutHandlerTest";	
@@ -155,8 +137,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	private boolean mLoggingEnabled = false;
 	private boolean mLogCatEnabled = true;
-	
-	private String mDatabaseTypeString = "";
 	
 	private Context mContext;
 	private MainActivity mActivity;
@@ -214,16 +194,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			Log.d(TAG, "Using DataOutHandler version " + DataOutHandler.getVersion());
 			
-			
-			SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-			mDatabaseTypeString = sharedPreferences.getString("external_database_type", "AWS");
-			
-			
-		    unitTests = new UnitTests(this, mDatabaseTypeString);    
+		    mUnitTests = new UnitTests(this, DataOutHandler.DATABASE_TYPE_T2_DRUPAL);    
 			
 		    Global.sDataOutHandler.setRequiresCSRF(true);
 						
-//			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, mDatabaseTypeString, this);
 			Global.sDataOutHandler.initializeDatabase( mRemoteDatabaseUri, DataOutHandler.DATABASE_TYPE_T2_DRUPAL, this);
 
 			
@@ -384,48 +358,39 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                 alert.setItems(labels, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                     	switch (which) {
-                    	case 0:
-                    		UnitTestParams params = unitTests.generatePacketFullGood(12345678, "sendFullPayload");
+                    	case 0: // Create a sensor record
+                    		UnitTestParams params = mUnitTests.generatePacketFullGood(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
                     		break;
                 	
-                    	case 1:
-                    		params = unitTests.generateTestPacketHabit(12345678, "sendFullPayload");
+                    	case 1: // Create a manual habit - no object involved
+	                    	Random random = new Random();
+	                    	String title = "Habit(manual) " + random.nextInt(100000);
+                    		params = mUnitTests.generateTestPacketHabit(12345678, title);
             				SendPacket(params.mPacketUnderTest);
                     		break;
                 	
-                    	case 2:
-                    		params = unitTests.generateTestPacketCheckinH4H(12345678, "sendFullPayload");
+                    	case 2: // Create a manual checkin - no object involved
+	                    	Random random1 = new Random();
+	                    	title = "Habit(manual) " + random1.nextInt(100000);
+                    		params = mUnitTests.generateTestPacketCheckinH4H(12345678, "sendFullPayload");
             				SendPacket(params.mPacketUnderTest);
                     		break;
                 	
-                    	case 3:
+                    	case 3: // Create a habit object (automatically registers with DataOutHandler)
                     		try {
                     			
-		                    	Random random = new Random();
-		                    	String title = "Habit " + random.nextInt(100000);
+		                    	Random random2 = new Random();
+		                    	title = "Habit " + random2.nextInt(100000);
 								Habit newHabit = new Habit(title, "Sample Note", new Date());
-								
-								
-								// Just show the list of habits so we know we got this one
-								mHabits = mH2H4h.getHabits();
-								if (mHabits != null) {
-									Log.e(TAG, "----Habits----");
-									for (Habit habit : mHabits) {
-										Log.e(TAG, habit.toString());
-									}
-									
-								}
-								
-								
-							} catch (DataOutHandlerException e) {
+
+                    		} catch (DataOutHandlerException e) {
 								Log.e(TAG, e.toString());
 								e.printStackTrace();
 							}
                     		break;
                 	
-                    	case 4:
-                    		
+                    	case 4: // Create a checkin object (automatically registers with DataOutHandler)
                     		
 								if (mHabits.size() > 0) {
 									
@@ -447,15 +412,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					                    	String title = "Checkin " + random.nextInt(100000);
 											Checkin newHabit = new Checkin(mHabits.get(which), title, new Date());
 					                    	
-					                    	
 					                    }
 					                });
 					                alert.show();					                
-					                
-									
 								}                    		
-
-
                     		break;
                     		
                 		default:
@@ -480,6 +440,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		    			public void onClick(DialogInterface dialog, int whichButton,boolean isChecked) {
 		    			}
 	                    });
+				    	
 		    	alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
 	                	
@@ -514,7 +475,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
         Button testDataButton = (Button) findViewById(R.id.button_TestData);
         testDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				unitTests.performUnitTests();
+				mUnitTests.performUnitTests();
 			}
 		});          
         
@@ -775,7 +736,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.e(TAG, e.toString());
 			e.printStackTrace();
 		}		
-		//unitTests.processUnitTests();
+		mUnitTests.processUnitTests();
 		//Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
 
