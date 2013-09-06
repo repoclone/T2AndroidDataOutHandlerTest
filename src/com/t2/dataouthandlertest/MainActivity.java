@@ -117,7 +117,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	/**
 	 * Current list of habits - updated from DataOutHandler
 	 */
-	List<Habit> mHabits = new ArrayList<Habit>();;
+	List<DataOutPacket> mHabits = new ArrayList<DataOutPacket>();;
 
 	
 	private H2H4h mH2H4h;
@@ -153,7 +153,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	/**
 	 * Database uri that the service will sync to 
 	 */
-	private String mRemoteDatabaseUri;	
+//	private String mRemoteDatabaseUri = ""; // If we send the URI as blank the DataOutHandler will pick the default uri based on database type	
+	private String mRemoteDatabaseUri = "http://t2health.us/h4hnew/api/"; 	
+//	private String mRemoteDatabaseUri = "http://t2health.us/h2/android/"; 	
 	
 	private List<String> dataTypesToShow = new ArrayList<String>();
 	
@@ -162,8 +164,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	void initDatabase() {
 
 		Log.d(TAG, "Initializing  database at " + mRemoteDatabaseUri);
-		
-		
 
 		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_HABIT);
 		dataTypesToShow.add(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN);
@@ -203,17 +203,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 			Global.sDataOutHandler.setRequiresAuthentication(true);
 			
-			
+			// Initialize main object to handle H$H objects
 			mH2H4h = new H2H4h();
-			
-			try {
-				mHabits = mH2H4h.getHabits();
-				
-			} catch (DataOutHandlerException e) {
-				Log.e(TAG, e.toString());
-				e.printStackTrace();
-			}			
-			
 			
 		} catch (Exception e1) {
 			Log.e(TAG, e1.toString());
@@ -252,6 +243,47 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 
 
+	/**
+	 * Sets the listview adapter to display data types as specified by dataTypesToShow
+	 */
+	private void setViewAdapterBasedOnDataTypesToShow() {
+		try {
+
+			final List<DataOutPacket> displayPacketList = new ArrayList<DataOutPacket>();
+			
+			for (String dataType : dataTypesToShow) {
+				if (dataType.equalsIgnoreCase(DataOutHandlerTags.STRUCTURE_TYPE_HABIT)) {
+					List<DataOutPacket> packetList = mH2H4h.getHabits();		
+					displayPacketList.addAll(packetList);
+				}
+				if (dataType.equalsIgnoreCase(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN)) {
+					List<DataOutPacket> packetList = mH2H4h.getCheckins();		
+					displayPacketList.addAll(packetList);
+				}
+//				if (dataType.equalsIgnoreCase(DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA)) {
+//					List<DataOutPacket> packetList = mH2H4h.getCheckins();		
+//					displayPacketList.addAll(packetList);
+//				}
+			}			
+
+			// Alternatively
+			//		final ArrayList displayPacketList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
+			//		final ArrayList displayPacketList = Global.sDataOutHandler.getPacketList("StructureType in ('check_in','sensor_data')");
+			
+			
+            if (displayPacketList != null) {
+                MainActivity.this.runOnUiThread(new Runnable(){
+                    public void run(){
+                		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, displayPacketList);
+                        mListview.setAdapter(adapter2);                 
+                    }
+                }); 		
+            }   							
+		} catch (DataOutHandlerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 
 	public class DataOutPacketArrayAdapter extends ArrayAdapter<DataOutPacket> {
@@ -349,6 +381,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     		"Checkin Object"
     		};        
         
+        // ----------------------------------------------------
+        // Add record button
+        // ----------------------------------------------------    	
         Button addDataButton = (Button) findViewById(R.id.button_AddData);
         addDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -382,7 +417,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
                     			
 		                    	Random random2 = new Random();
 		                    	title = "Habit " + random2.nextInt(100000);
-								Habit newHabit = new Habit(title, "Sample Note", new Date());
+								Habit newHabit = new Habit(title, "Sample Note", new Date());  // Automatically registers with DataOutHandler
 
                     		} catch (DataOutHandlerException e) {
 								Log.e(TAG, e.toString());
@@ -396,7 +431,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 									
 		                    		String[] habitTitles = new String[mHabits.size()];                    		
 									int i = 0;
-									for (Habit habit : mHabits) {
+									for (DataOutPacket dop : mHabits) {
+										Habit habit = (Habit) dop;
 										Log.e(TAG, habit.toString());
 										habitTitles[i++] = habit.mTitle;
 									}
@@ -410,7 +446,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					                    	
 					                    	Random random = new Random();
 					                    	String title = "Checkin " + random.nextInt(100000);
-											Checkin newHabit = new Checkin(mHabits.get(which), title, new Date());
+					                    	DataOutPacket dop = mHabits.get(which);
+											Checkin newCheckin = new Checkin((Habit) dop, title, new Date()); // Automatically registers with DataOutHandler
 					                    	
 					                    }
 					                });
@@ -428,6 +465,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			}
 		});        
         
+        // ----------------------------------------------------
+        // View types button
+        // ----------------------------------------------------
         Button chooseDataTypesButton = (Button) findViewById(R.id.button_choose_data_types);
         chooseDataTypesButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -453,18 +493,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	            			}
 	            		}
 	                	
-//	            		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
-	            		final ArrayList packetList = Global.sDataOutHandler.getPacketList("StructureType in ('check_in','sensor_data')");
-	                    if (packetList != null) {
-	                        MainActivity.this.runOnUiThread(new Runnable(){
-	                            public void run(){
-	                        		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-	                                mListview.setAdapter(adapter2);                 
-	                            }
-	                        }); 		
-	                    }      
-	                	
-	            		
+	            		setViewAdapterBasedOnDataTypesToShow();
 	                }
 	            });
 
@@ -472,29 +501,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			}
 		});        
         
+        // ----------------------------------------------------
+        // Unit tests button
+        // ----------------------------------------------------
         Button testDataButton = (Button) findViewById(R.id.button_TestData);
         testDataButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				mUnitTests.performUnitTests();
 			}
 		});          
-        
-// 		We'll leave this blank, that way DataOutHandler will pick the default uri based on database type
-//      mDefaultRemoteDatabaseUri = getResources().getString(R.string.default_aws_database_uri);	
-        mDefaultRemoteDatabaseUri = "";	
-        mRemoteDatabaseUri = SharedPref.getString(this, "database_sync_name", mDefaultRemoteDatabaseUri);
-        Log.d(TAG, "Remote database Uri = " + mRemoteDatabaseUri);	
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        
-        
-        SharedPreferences.Editor prefsEditor = prefs.edit();
-        prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_drupal)); // Set database type to DRUPAL
-//      prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_aws)); // Set database type to AWS
-//      prefsEditor.putString(getString(R.string.external_database_type), getString(R.string.database_type_t2_rest)); // Set database type to T2
-        prefsEditor.commit();
-        
-	    prefs.registerOnSharedPreferenceChangeListener(this);    
         
 	    initDatabase();
 
@@ -519,15 +534,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	protected void onResume() {
 		super.onResume();
 		Log.e(TAG,"onResume()");
-		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
-        if (packetList != null) {
-            MainActivity.this.runOnUiThread(new Runnable(){
-                public void run(){
-            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                    mListview.setAdapter(adapter2);                 
-                }
-            }); 		
-        }
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+            	setViewAdapterBasedOnDataTypesToShow();              
+            }
+        }); 		
 	}
 
 	@Override
@@ -649,7 +660,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.e(TAG, "----Habits----");
 			mHabits = mH2H4h.getHabits();
 			if (mHabits != null) {
-				for (Habit habit : mHabits) {
+				for (DataOutPacket dop : mHabits) {
+					Habit habit = (Habit) dop;
 					Log.e(TAG, habit.toString());
 				}
 				
@@ -660,15 +672,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}
 	
 		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
-        if (packetList != null) {
-            MainActivity.this.runOnUiThread(new Runnable(){
-                public void run(){
-            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                    mListview.setAdapter(adapter2);                 
-                }
-            }); 		
-        }      
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+            	setViewAdapterBasedOnDataTypesToShow();                 
+            }
+        }); 		
 	}
 
 	/* (non-Javadoc)
@@ -689,7 +697,8 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.e(TAG, "----Habits----");
 			mHabits = mH2H4h.getHabits();
 			if (mHabits != null) {
-				for (Habit habit : mHabits) {
+				for (DataOutPacket dop : mHabits) {
+					Habit habit = (Habit) dop;
 					Log.e(TAG, habit.toString());
 				}
 				
@@ -698,15 +707,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.e(TAG, e.toString());
 			e.printStackTrace();
 		}		
-		final ArrayList packetList = Global.sDataOutHandler.getPacketList(dataTypesToShow);
-        if (packetList != null) {
-            MainActivity.this.runOnUiThread(new Runnable(){
-                public void run(){
-            		DataOutPacketArrayAdapter adapter2 = new DataOutPacketArrayAdapter(mActivity, packetList);
-                    mListview.setAdapter(adapter2);                 
-                }
-            }); 		
-        }   
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+            	setViewAdapterBasedOnDataTypesToShow();                 
+            }
+        }); 		
 	}
 
 	/* (non-Javadoc)
@@ -739,8 +744,4 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		mUnitTests.processUnitTests();
 		//Log.e(TAG, "End remoteDatabaseSyncComplete() ");
 	}
-
-
-	
-	
 }
