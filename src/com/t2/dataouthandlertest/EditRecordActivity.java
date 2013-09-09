@@ -72,8 +72,6 @@ public class EditRecordActivity extends Activity  {
 
 	public EditRecordActivity() {
 	}
-	
-	
 
 	public class KeyValue {
 		String mKey;
@@ -82,11 +80,8 @@ public class EditRecordActivity extends Activity  {
 		public KeyValue(String key, String value) {
 			mKey = key;
 			mValue = value;
-			
 		}
-		
 	}
-	
 	
     public class KeyValuePacketArrayAdapter extends ArrayAdapter<KeyValue> {
     	  private final Context context;
@@ -148,16 +143,10 @@ public class EditRecordActivity extends Activity  {
     						else {
             					mCurrentPacket.mItemsMap.put(item.mKey, newValue);
     						}
-    						
     					}
-    					
-    					
     					
     			        KeyValuePacketArrayAdapter adapter2 = new KeyValuePacketArrayAdapter(mContext, PacketToArrayOfValues(mCurrentPacket));
     			        listview.setAdapter(adapter2);     					
-    					
-    					
-    					
     				  }
     				});
 
@@ -169,18 +158,9 @@ public class EditRecordActivity extends Activity  {
     				alert1.show();	      	        	 
       	         }
       	    });    	    
-    	    
-    	    
-    	    
-    	    
     	    return rowView;
     	  }
-    	  
-    	  
-    	  
-    	  
     	}  	
-	
 
 	private List<KeyValue> PacketToArrayOfValues(DataOutPacket packet) {
 		List<KeyValue> list = new ArrayList<KeyValue>();
@@ -218,7 +198,6 @@ public class EditRecordActivity extends Activity  {
 		return list;
 	}
 	
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -246,13 +225,9 @@ public class EditRecordActivity extends Activity  {
   	        	 finish();
   	         }
   	    });
-  	            
-        
-        
         
 		Bundle bundle = getIntent().getExtras();
 		String articleNodeId = bundle.getString("article_id");        
-		
 		
 		try
 		{
@@ -266,19 +241,12 @@ public class EditRecordActivity extends Activity  {
 		
 		}
 		catch(Exception ex){
-
+			Log.e(TAG, ex.toString());
 		}		
-        
-        		
-		
-		
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 	}
-
-	
-	
 }

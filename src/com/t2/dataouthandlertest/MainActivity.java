@@ -113,6 +113,13 @@ import android.support.v4.app.NavUtils;
 
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener, T2AuthDelegate, 
 	DatabaseCacheUpdateListener, OnItemClickListener  {
+	private static final String TAG = MainActivity.class.getSimpleName();
+	private static final String APP_ID = "DataOutHandlerTest";	
+	private static final String NOT_USED_STRING = "";
+	private static final Long NOT_USED_LONG = (long) 0;
+	
+	public static final int ACTIVITY_REFERENCE = 0x302;		
+	public static final int TEST_CASE_TIMEOUT = 30000;
 
 	/**
 	 * Current list of habits - updated from DataOutHandler
@@ -127,13 +134,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     
     private UnitTests mUnitTests;
 
-	private static final String TAG = MainActivity.class.getSimpleName();
-	private static final String APP_ID = "DataOutHandlerTest";	
-	private static final String NOT_USED_STRING = "";
-	private static final Long NOT_USED_LONG = (long) 0;
-	
-	public static final int ACTIVITY_REFERENCE = 0x302;		
-	public static final int TEST_CASE_TIMEOUT = 30000;
 	
 	private boolean mLoggingEnabled = false;
 	private boolean mLogCatEnabled = true;
@@ -161,6 +161,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	private boolean[]  mDataTypesToggleArray;
 	
+	/**
+	 * Initializes database
+	 */
 	void initDatabase() {
 
 		Log.d(TAG, "Initializing  database at " + mRemoteDatabaseUri);
@@ -226,9 +229,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     	Global.sDataOutHandler = null;
 		super.onDestroy();
 	}
-
-    
-    
     
     @Override
 	protected void onPause() {
@@ -241,7 +241,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		// TODO Auto-generated method stub
 		super.onStop();
 	}
-
 
 	/**
 	 * Sets the listview adapter to display data types as specified by dataTypesToShow
@@ -286,6 +285,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 
 
+	/**
+	 * Array adapter for DataOutPackets
+	 * @author scott.coleman
+	 *
+	 */
 	public class DataOutPacketArrayAdapter extends ArrayAdapter<DataOutPacket> {
   	  private final Context context;
 
@@ -311,6 +315,17 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	    editButton.setOnClickListener(new View.OnClickListener() {
   	         public void onClick(View v) {
   	        	 Log.e(TAG, "Edit Button " + buttonposition);
+  	     	    DataOutPacket fred = item;  	    
+  	     	    try {
+					DataOutPacket barney = Global.sDataOutHandler.getPacketByDrupalId(item.mDrupalId);
+					Log.e(TAG, barney.toString());
+				} catch (DataOutHandlerException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+  	        	 
+  	        	 Log.e(TAG, item.mItemsMap.toString());
+  	        	 
 				Intent intent = new Intent(mContext, EditRecordActivity.class);
 				// Send the currently selected DataOutPacked for editing
 				Bundle args = new Bundle();
@@ -338,6 +353,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
   	  }
   	}       
     
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 */
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -548,8 +566,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     }
     
     public boolean onOptionsItemSelected(MenuItem item) {
-        //respond to menu item selection
-
 		switch (item.getItemId()) {
 		    case R.id.menu_settings:
 			    startActivity(new Intent(this, DataOutTestPreferences.class));
