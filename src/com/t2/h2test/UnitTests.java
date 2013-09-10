@@ -631,40 +631,11 @@ public class UnitTests {
 		packet.add(DataOutHandlerTags.version, description);
 		packet.add(DataOutHandlerTags.HABIT_NOTE, "Test habit 1 - note");
 		
-	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	Calendar calendar = GregorianCalendar.getInstance();
-//    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));   // Drupal wants normal format
-        String timeString = dateFormatter.format(calendar.getTime());		
-		
-//    	long millis = calendar.getTimeInMillis();
-//    	timeString = String.valueOf(millis/1000);
-        
-        
-        
-		packet.add(DataOutHandlerTags.HABIT_REMINDER_TIME, timeString);
-		
-		// Now create pass/fail criteria
-		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);
-
-		return unitTestParams;
-	}		
-
-	public UnitTestParams generateTestPacketCheckin(int testCaseNum, String description) {
-
-	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    	Calendar calendar = GregorianCalendar.getInstance();
-    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String timeString = dateFormatter.format(calendar.getTime());
-		
-		
-		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN);
-		
-		packet.mTitle = description;		
-		packet.add(DataOutHandlerTags.TITLE, description);
-		
-		packet.add(DataOutHandlerTags.version, description);
-		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, timeString);
-		packet.add(DataOutHandlerTags.CHECKIN_HABIT_ID, 1);
+		long currentTime = calendar.getTimeInMillis();	
+		String reminderTimeUnix = String.valueOf(currentTime / 1000);		
+    	
+		packet.add(DataOutHandlerTags.HABIT_REMINDER_TIME, reminderTimeUnix);
 		
 		// Now create pass/fail criteria
 		UnitTestParams unitTestParams = new UnitTestParams(packet, String.valueOf(testCaseNum), null, null, false, description);
@@ -674,16 +645,13 @@ public class UnitTests {
 
 	public UnitTestParams generateTestPacketCheckinH4H(int testCaseNum, String description) {
 
-	    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	Calendar calendar = GregorianCalendar.getInstance();
-//    	dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));   // Drupal wants normal format
-        String timeString = dateFormatter.format(calendar.getTime());
-		
+		long currentTime = calendar.getTimeInMillis();	
+		String checkinTimeUnix = String.valueOf(currentTime / 1000);	
 		
 		DataOutPacket packet = new DataOutPacket(DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN_H4H);
 		packet.mTitle = "Test Checkin";
-//		packet.add(DataOutHandlerTags.version, description);
-		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, timeString);
+		packet.add(DataOutHandlerTags.CHECKIN_CHECKIN_TIME, checkinTimeUnix);
 		packet.add(DataOutHandlerTags.CHECKIN_HABIT_ID, 1);
 		
 		// Now create pass/fail criteria

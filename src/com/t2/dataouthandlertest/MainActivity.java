@@ -126,14 +126,15 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	List<DataOutPacket> mHabits = new ArrayList<DataOutPacket>();;
 
-	
+	/**
+	 * Interface class for habit classes 
+	 */
 	private H2H4h mH2H4h;
 	
     private static List<UnitTestParams> UnitTestQueue =
             Collections.synchronizedList(new ArrayList<UnitTestParams>());	
     
     private UnitTests mUnitTests;
-
 	
 	private boolean mLoggingEnabled = false;
 	private boolean mLogCatEnabled = true;
@@ -394,7 +395,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
     	final String[] labels = new String[] {
     		DataOutHandlerTags.STRUCTURE_TYPE_SENSOR_DATA, 
     		DataOutHandlerTags.STRUCTURE_TYPE_HABIT, 
-    		DataOutHandlerTags.STRUCTURE_TYPE_CHECKIN,
     		"Habit Object",
     		"Checkin Object"
     		};        
@@ -423,14 +423,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
             				SendPacket(params.mPacketUnderTest);
                     		break;
                 	
-                    	case 2: // Create a manual checkin - no object involved
-	                    	Random random1 = new Random();
-	                    	title = "Habit(manual) " + random1.nextInt(100000);
-                    		params = mUnitTests.generateTestPacketCheckinH4H(12345678, "sendFullPayload");
-            				SendPacket(params.mPacketUnderTest);
-                    		break;
-                	
-                    	case 3: // Create a habit object (automatically registers with DataOutHandler)
+                    	case 2: // Create a habit object (automatically registers with DataOutHandler)
                     		try {
                     			
 		                    	Random random2 = new Random();
@@ -443,7 +436,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 							}
                     		break;
                 	
-                    	case 4: // Create a checkin object (automatically registers with DataOutHandler)
+                    	case 3: // Create a checkin object (automatically registers with DataOutHandler)
                     		
 								if (mHabits.size() > 0) {
 									
@@ -722,7 +715,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		} catch (DataOutHandlerException e) {
 			Log.e(TAG, e.toString());
 			e.printStackTrace();
-		}		
+		}
+		
+		
         MainActivity.this.runOnUiThread(new Runnable(){
             public void run(){
             	setViewAdapterBasedOnDataTypesToShow();                 
@@ -737,6 +732,21 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	 */
 	@Override
 	public void remoteDatabaseFailure(String msg) {
+		
+        final String message = "Error: " + msg;
+		Log.d(TAG, message);
+		
+        MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+            	setViewAdapterBasedOnDataTypesToShow();                 
+            }
+        }); 		
+
+		MainActivity.this.runOnUiThread(new Runnable(){
+            public void run(){
+                new AlertDialog.Builder(mContext).setMessage(message).setPositiveButton("OK", null).setCancelable(true).create().show();		
+            }
+        }); 		
 	}
 
 
